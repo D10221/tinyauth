@@ -6,6 +6,11 @@ import (
 	// "encoding/base64"
 	"fmt"
 	"github.com/D10221/tinyauth/credentials"
+	"os"
+	"log"
+	"io/ioutil"
+	"path/filepath"
+	"encoding/json"
 )
 
 var AuthorizationKey = "Authorization"
@@ -31,4 +36,24 @@ func main() {
 	http.HandleFunc("/", RequireAuthentication(Hello))
 	addr := ":8080"
 	http.ListenAndServe(addr, nil)
+}
+
+func init() {
+	setupCredentials()
+}
+
+func setupCredentials(){
+
+	dir, e:= os.Getwd()
+	if e != nil{
+		log.Fatal(e)
+	}
+	bytes, e := ioutil.ReadFile(filepath.Join(dir, "testdata/credentials.json"))
+	if e!= nil {
+		panic(e)
+	}
+	e = json.Unmarshal(bytes, & credentials.AllCredentials)
+	if e!= nil{
+		panic(e)
+	}
 }

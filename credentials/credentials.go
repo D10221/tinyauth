@@ -26,8 +26,8 @@ func (credentials *Credentials) Encode() string {
 
 func Decode(auth string) (*Credentials, error) {
 	c := &Credentials{}
-	decoded, e, ok := encoding.Decode(auth)
-	if ok {
+	decoded, e := encoding.Decode(auth)
+	if e!=nil {
 		parts := strings.Split(decoded, ":")
 		if len(parts) < 2 {
 			// t.Error("Bad Decoding")

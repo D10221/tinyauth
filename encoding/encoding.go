@@ -15,22 +15,31 @@ func EncodeWithSchema(left, right string) string {
 
 var basicScheme string
 
-func Decode(auth string) (decoded string, err error, ok bool) {
-	if s, e, ok := skipScheme(auth); !ok{
-		return "", e, false
-	} else {
-		b, e := base64.StdEncoding.DecodeString(s)
-		if e != nil {
-			return "", e, false
-		}
-		return string(b), nil , true
+func Decode(auth string) (decoded string, err error) {
+	s, e := skipScheme(auth)
+	if e!=nil {
+		return "", e
 	}
+	b, e := base64.StdEncoding.DecodeString(s)
+	if e != nil {
+		return "", e
+	}
+	return string(b), nil
 }
-func skipScheme(auth string)( string , error , bool ){
-	if strings.HasPrefix(auth, basicScheme)	{
-		return auth[len(basicScheme):] , nil , true
+
+func ShouldDecode(auth string) string {
+	r,err := Decode(auth)
+	if err!=nil {
+		return ""
 	}
-	return "", &DecodeError{"No Scheme"}, false
+	return r
+}
+
+func skipScheme(auth string)( string , error  ){
+	if strings.HasPrefix(auth, basicScheme)	{
+		return auth[len(basicScheme):] , nil
+	}
+	return "", &DecodeError{"No Scheme"}
 }
 
 type DecodeError struct {
