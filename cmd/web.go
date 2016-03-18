@@ -36,6 +36,7 @@ func main() {
 	http.HandleFunc("/", RequireAuthentication(Hello))
 	addr := ":8080"
 	http.ListenAndServe(addr, nil)
+
 }
 
 func init() {

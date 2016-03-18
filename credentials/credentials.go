@@ -27,7 +27,7 @@ func (credentials *Credentials) Encode() string {
 func Decode(auth string) (*Credentials, error) {
 	c := &Credentials{}
 	decoded, e := encoding.Decode(auth)
-	if e!=nil {
+	if e==nil {
 		parts := strings.Split(decoded, ":")
 		if len(parts) < 2 {
 			// t.Error("Bad Decoding")
@@ -36,7 +36,7 @@ func Decode(auth string) (*Credentials, error) {
 		c.Username = parts[0]
 		c.Password = parts[1]
 	}
-	return c, nil
+	return c, e
 }
 
 func MustDecode(auth string) *Credentials {
