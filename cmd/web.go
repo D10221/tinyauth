@@ -5,40 +5,30 @@ import (
 	// "strings"
 	// "encoding/base64"
 	"fmt"
-	"log"
 	"github.com/D10221/tinyauth/credentials"
 )
 
-
-
 var AuthorizationKey = "Authorization"
 
-func Authenticate(r *http.Request) (bool, error) {
+type Handler func (w http.ResponseWriter, r *http.Request);
 
-	if r == nil {
-		return false
+func RequireAuthentication(handler Handler) Handler {
+	return func (w http.ResponseWriter, r *http.Request){
+		auth := r.Header.Get(AuthorizationKey)
+		if(!credentials.ShouldDecode(auth).Authenticate()){
+			http.Error(w, "unauthorized", 401)
+			return
+		}
+		handler(w,r)
 	}
-
-	// Confirm the request is sending Basic Authentication credentials.
-	auth := r.Header.Get(AuthorizationKey)
-	credentials, err := credentials.Decode(auth)
-	if err!nil {
-		log.Fatal(err)
-	}
-	return credentials.Authenticate()
 }
 
-func Handle(w http.ResponseWriter, r *http.Request) {
-	ok, err := Authenticate(r)
-	if !ok {
-		log.Fatal(err)
-		http.Error(w, "unauthorized", 401)
-	}
-	fmt.Fprint(w, "Ok")
+func Hello(w http.ResponseWriter, r *http.Request){
+	fmt.Fprint(w, "200 OK")
 }
 
 func main() {
-	http.HandleFunc("/", Handle)
+	http.HandleFunc("/", RequireAuthentication(Hello))
 	addr := ":8080"
 	http.ListenAndServe(addr, nil)
 }

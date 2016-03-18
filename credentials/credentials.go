@@ -3,6 +3,7 @@ package credentials
 import (
 	"github.com/D10221/tinyauth/encoding"
 	"strings"
+	"log"
 )
 
 type Credentials struct {
@@ -12,6 +13,11 @@ type Credentials struct {
 
 func New(username, password string) *Credentials {
 	return &Credentials{Username:username, Password: password}
+}
+
+// Must contain values
+func (cred *Credentials) Valid() bool {
+	return cred.Username != "" && cred.Password != ""
 }
 
 func (credentials *Credentials) Encode() string {
@@ -33,10 +39,40 @@ func Decode(auth string) (*Credentials, error) {
 	return c, nil
 }
 
-func AuthFunc(u, p string) bool {
-	return u == "u" && p == "p"
+func MustDecode(auth string) *Credentials {
+	credentials, err := Decode(auth)
+	if err != nil {
+		panic(err)
+	}
+	return credentials
 }
 
-func (c *Credentials)Authenticate() bool {
-	return AuthFunc(c.Username, c.Password)
+func ShouldDecode(auth string) *Credentials {
+	credentials, _ := Decode(auth)
+	return credentials
+}
+
+var AllCredentials  []Credentials
+
+type Authenticator func (u, p string) bool;
+
+var authenticator Authenticator = nil ;
+
+func (c *Credentials) Authenticate() bool {
+	if authenticator == nil {
+		log.Fatal("No Authenticator found")
+		return false
+	}
+	return  authenticator(c.Username, c.Password)
+}
+
+func init(){
+	authenticator = func (u, p string) bool {
+		for _, credential := range AllCredentials[:]{
+			if credential.Username == u && credential.Password == p {
+				return true
+			}
+		}
+		return false
+	};
 }
