@@ -1,33 +1,35 @@
 package credentials
 
 import (
-	"github.com/D10221/tinyauth/encoding"
 	"strings"
 	"log"
+	"github.com/D10221/tinyauth/encoding"
+	"github.com/D10221/tinyauth/criptico"
+	"github.com/D10221/tinyauth/config"
 )
 
-type Credentials struct {
+type Credential struct {
 	Username string
 	Password string
 }
 
-func New(username, password string) *Credentials {
-	return &Credentials{Username:username, Password: password}
+func New(username, password string) *Credential {
+	return &Credential{Username:username, Password: password}
 }
 
 // Must contain values
-func (cred *Credentials) Valid() bool {
+func (cred *Credential) Valid() bool {
 	return cred.Username != "" && cred.Password != ""
 }
 
-func (credentials *Credentials) Encode() string {
+func (credentials *Credential) Encode() string {
 	return encoding.EncodeWithSchema(credentials.Username, credentials.Password)
 }
 
-func Decode(auth string) (*Credentials, error) {
-	c := &Credentials{}
+func Decode(auth string) (*Credential, error) {
+	c := &Credential{}
 	decoded, e := encoding.Decode(auth)
-	if e==nil {
+	if e == nil {
 		parts := strings.Split(decoded, ":")
 		if len(parts) < 2 {
 			// t.Error("Bad Decoding")
@@ -39,7 +41,7 @@ func Decode(auth string) (*Credentials, error) {
 	return c, e
 }
 
-func MustDecode(auth string) *Credentials {
+func MustDecode(auth string) *Credential {
 	credentials, err := Decode(auth)
 	if err != nil {
 		panic(err)
@@ -47,29 +49,40 @@ func MustDecode(auth string) *Credentials {
 	return credentials
 }
 
-func ShouldDecode(auth string) *Credentials {
+func ShouldDecode(auth string) *Credential {
 	credentials, _ := Decode(auth)
 	return credentials
 }
 
-var AllCredentials  []Credentials
 
-type Authenticator func (u, p string) bool;
 
-var authenticator Authenticator = nil ;
-
-func (c *Credentials) Authenticate() bool {
-	if authenticator == nil {
+func (c *Credential) Authenticate() bool {
+	if AuthFunc == nil {
 		log.Fatal("No Authenticator found")
 		return false
 	}
-	return  authenticator(c.Username, c.Password)
+	return AuthFunc(c.Username, c.Password)
 }
 
-func init(){
-	authenticator = func (u, p string) bool {
-		for _, credential := range AllCredentials[:]{
-			if credential.Username == u && credential.Password == p {
+type Authenticator func(u, p string) bool;
+
+var AuthFunc Authenticator = nil;
+
+var Credentials = &CredentialStore{}
+
+func init() {
+	AuthFunc = func(username, password string) bool {
+		for _, credential := range Credentials.All()[:] {
+			currentPassword := func() string{
+				// TODO Refactor, circular reference ?
+				if config.Current.Secret == "" {
+					return credential.Password
+				}
+				return criptico.Decrypt([]byte(config.Current.Secret), credential.Password)
+			}()
+
+			if credential.Username == username &&
+			currentPassword == password {
 				return true
 			}
 		}
