@@ -7,16 +7,16 @@ import (
 	"os"
 )
 
-type CredentialStore struct {
-	all []Credential
+type SimpleCredentialStore struct {
+	all [] Credential
 }
 
-func(store *CredentialStore) All() []Credential {
+func(store *SimpleCredentialStore) All() []Credential {
 	return store.all
 }
 
 // "testdata/credentials.json"
-func (store *CredentialStore) LoadJsonFromRelativePath(path string) {
+func (store *SimpleCredentialStore) LoadJsonFromRelativePath(path string) {
 
 	dir, e := os.Getwd()
 	if e != nil {
@@ -35,10 +35,11 @@ func (store *CredentialStore) LoadJsonFromRelativePath(path string) {
 	}
 }
 
-func (store *CredentialStore) Load(credentials ...Credential){
+func (store *SimpleCredentialStore) Load(credentials ...Credential){
 	store.all = make([]Credential, 0)
 	for _,credential := range credentials[:]{
 		store.all = append(store.all, credential)
 	}
 }
+
 

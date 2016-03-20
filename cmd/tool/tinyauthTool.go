@@ -69,27 +69,6 @@ func SwitchTask(writer io.Writer) error {
 	}
 	return nil
 }
-/*type Erroer func() error;
-
-func (erroer Erroer) OrPanic(){
-	if o:= erroer(); o != nil {
-		panic(o)
-	}
-}
-
-func Try(f func(w io.Writer,s string) error, parameter string, w io.Writer) Erroer {
-	return func() error {
-		return f(w, parameter)
-	}
-}
-
-type LeftRightOperator func(w io.Writer ,left,right string) error;
-
-func Tryy(f LeftRightOperator, writer io.Writer , left, right string) Erroer {
-	return func() error {
-		return f(writer, left, right)
-	}
-}*/
 
 func encode(w io.Writer, left, right string) error {
 	if left == "" && right == "" {
@@ -130,26 +109,6 @@ func decrypt(w io.Writer,word string) error {
 	return nil
 }
 
-type Bonk struct {
-	Message string
-	Code int
-}
-
-func (c *Bonk) Error() string {
-	return c.Message
-}
-func Bonkers(message string) error {
-	return &Bonk{Message: message}
-}
-func BonkersF(format string, i interface{}) error {
-	return &Bonk{ Message: fmt.Sprintf(format, i), }
-}
-func BonkCode(e error) int {
-	value, ok := e.(*Bonk)
-	if !ok { panic("???") }
-	return value.Code
-}
-
 func ParseCommandLine(args []string) error {
 
 	flag.CommandLine.Parse(args)
@@ -178,8 +137,8 @@ func LoadConfig() error {
 		return e
 	}
 
-	if config.Current.AuthorizationKey=="" || config.Current.Secret=="" {
-		return &Bonk{ ":( bad config ... \n", 500 }
+	if e= config.Current.Validate() ; e != nil {
+		return &Bonk{ fmt.Sprintf(":( bad config ... \n %s", e.Error()), 500 }
 	}
 
 	return nil

@@ -7,7 +7,11 @@ import (
 
 func Test_Credentials(t *testing.T){
 
-	Credentials.Load(Credential{"admin", "P@55w0rd!"})
+	store, ok := Credentials.(*SimpleCredentialStore)
+	if !ok {
+		t.Error("Credentials is Not a SimpleCredenetialStore")
+	}
+	store.Load(Credential{"admin", "P@55w0rd!"})
 
 	cred := New("bob", "P@55w0rd!")
 
@@ -66,7 +70,11 @@ func Test_Credentials(t *testing.T){
 
 func Test_Encrypted_Credentials(t *testing.T){
 
-	Credentials.Load(Credential{"admin", "P@55w0rd!"})
+	store, ok := Credentials.(*SimpleCredentialStore)
+	if !ok {
+		t.Error("Credentials is Not a *SimpleCredentialStore")
+	}
+	store.Load(Credential{"admin", "P@55w0rd!"})
 
 	secret := []byte("ABRACADABRA12345")
 
@@ -122,5 +130,20 @@ func Test_Encrypted_Credentials(t *testing.T){
 
 	if(!(&Credential{"me", "1234"}).Valid()){
 		t.Error("it Should")
+	}
+}
+
+type _TestSTore struct {
+
+}
+
+func (store *_TestSTore) All() []Credential{
+	return []Credential{ Credential{"admin", "P@55w0rd!"} }
+}
+
+func Test_Replace_CredentialStore(t *testing.T){
+	Credentials = &_TestSTore{}
+	if Credentials.All()[0].Username != "admin" {
+		t.Error("Doen't work")
 	}
 }

@@ -20,6 +20,9 @@ func main() {
 }
 
 func init() {
-	credentials.Credentials.LoadJsonFromRelativePath("testdata/credentials.json")
+	if store, ok := credentials.Credentials.(*credentials.SimpleCredentialStore); ok {
+		store.LoadJsonFromRelativePath("testdata/credentials.json")
+	}
+
 }
 
