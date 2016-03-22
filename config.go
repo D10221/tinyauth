@@ -1,5 +1,4 @@
-// tinyauth configuration
-package config
+package tinyauth
 
 import (
 	"io/ioutil"
@@ -7,17 +6,16 @@ import (
 	"errors"
 )
 
-type Config struct {
-	Secret string
+type TinyAuthConfig struct {
+	Secret           string
 	AuthorizationKey string
+	BasicScheme      string // "Basic "
 }
 
-var Current = &Config{}
-
 // Load config From Json file (full path)
-func (config *Config) LoadConfig(path string) error {
+func (config *TinyAuthConfig) LoadConfig(path string) error {
 
-	bytes, err :=  ioutil.ReadFile(path)
+	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -30,17 +28,18 @@ func (config *Config) LoadConfig(path string) error {
 
 // Is configuration valid ?
 // maybe
-func (config *Config)Validate() error {
+func (config *TinyAuthConfig)Validate() error {
 	if config.AuthorizationKey == "" {
 		return errors.New("No Authorization Key")
- 	}
+	}
 	if config.Secret == "" {
 		return errors.New("No secret")
- 	}
+	}
 
 	if len(config.Secret) != 16 {
 		return errors.New("Bad secret length")
- 	}
+	}
 
 	return nil
 }
+

@@ -6,29 +6,42 @@ import (
 	"strings"
 	"bytes"
 	"fmt"
+	"github.com/D10221/tinyauth"
 )
 
 func Test_TinyAUthTool_NoTask(t *testing.T){
 	args:= make([]string, 0)
 	// append(args, "--config:=")
-	e:= ParseCommandLine(args)
+	// args:= [...]string { "-task=encode", "-left=me" , "-right=me" , "-config=.noconfig.json"}
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+		Secret: "", // ABRACADABRA12345
+		AuthorizationKey: "Authorization",
+		BasicScheme: "Basic ",
+	})}
+	e:= app.ParseCommandLine(args)
 	if e != nil {
 		t.Errorf("it shouldn't fail %s", e.Error())
 	}
-	e = SwitchTask(os.Stdout)
+	e = app.SwitchTask(os.Stdout)
 	if message := func() string{ if e!= nil { return e.Error() } else { return ""  }}(); message != "task required" {
 		t.Errorf("Error: %s \n", message)
 	}
 }
 
 func Test_TinyAUthTool(t *testing.T){
+
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+		Secret: "", // ABRACADABRA12345
+		AuthorizationKey: "Authorization",
+		BasicScheme: "Basic ",
+	})}
 	args:= [...]string { "-task=encode", "-left=me" , "-right=me"}
-	e:= ParseCommandLine(args[:])
+	e:= app.ParseCommandLine(args[:])
 	if e != nil {
 		t.Error("it shouldn't fail")
 	}
 	writer:= &bytes.Buffer{}
-	e = SwitchTask(writer)
+	e = app.SwitchTask(writer)
 	if e != nil {
 		t.Error("it shouldn't fail")
 	}
@@ -40,13 +53,19 @@ func Test_TinyAUthTool(t *testing.T){
 
 func Test_TinyAUthLoadConfig(t *testing.T){
 
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+		Secret: "", // ABRACADABRA12345
+		AuthorizationKey: "Authorization",
+		BasicScheme: "Basic ",
+	})}
+
 	args:= [...]string { "-task=encode", "-left=me" , "-right=me" , "-config=config.json"}
-	e:= ParseCommandLine(args[:])
+	e:= app.ParseCommandLine(args[:])
 	if e != nil {
 		t.Error("it shouldn't fail")
 	}
 	writer:= &bytes.Buffer{}
-	e = SwitchTask(writer)
+	e = app.SwitchTask(writer)
 	if e != nil {
 		t.Error("it shouldn't fail")
 	}
@@ -56,12 +75,20 @@ func Test_TinyAUthLoadConfig(t *testing.T){
 	}
 }
 func Test_TinyauthCantFindConfig(t *testing.T){
+
 	args:= [...]string { "-task=encode", "-left=me" , "-right=me" , "-config=.noconfig.json"}
-	e:= ParseCommandLine(args[:])
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+		Secret: "", // ABRACADABRA12345
+		AuthorizationKey: "Authorization",
+		BasicScheme: "Basic ",
+	})}
+
+	e:= app.ParseCommandLine(args[:])
 	if e != nil {
 		t.Error(e)
 	}
-	e = LoadConfig()
+
+	e = app.LoadConfig()
 	if e!= nil {
 		return
 	}
@@ -82,13 +109,19 @@ func Test_BonkCode(t *testing.T){
 
 func Test_TinyAUthLoadBadConfig(t *testing.T){
 
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+		Secret: "", // ABRACADABRA12345
+		AuthorizationKey: "Authorization",
+		BasicScheme: "Basic ",
+	})}
+
 	args:= [...]string { "-task=encode", "-left=me" , "-right=me" , "-config=../../testdata/badconfig.json"}
-	e:= ParseCommandLine(args[:])
+	e:= app.ParseCommandLine(args[:])
 	if e != nil {
 		t.Errorf("it shouldn't fail:... %s", e.Error())
 	}
 	writer:= &bytes.Buffer{}
-	e = SwitchTask(writer)
+	e = app.SwitchTask(writer)
 	if e != nil {
 		t.Error("it shouldn't fail")
 	}
