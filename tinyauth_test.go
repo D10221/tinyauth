@@ -28,9 +28,16 @@ func Test_RequireAuthentication_Encrypted(t *testing.T){
 
 	response := httptest.NewRecorder()
 
-	request.Header.Add("Authorization", "Basic YWRtaW46UEA1NXcwcmQh")
+	// encoded,  not encrypted password over the wire : https required
+	request.Header.Add("Authorization", tAuth.Encoder.Encode("admin", "password"))
 
-	tAuth.CredentialStore.Load( Credential{"admin", "P@55w0rd!"})
+	pwd, e:= tAuth.Criptico.Encrypt("password")
+
+	if e!=nil {
+		t.Error(e)
+	}
+
+	tAuth.CredentialStore.Load( Credential{"admin", pwd})
 
 	found, err := tAuth.CredentialStore.FindUser("admin")
 	if err!= nil || !found.Valid() {
@@ -55,7 +62,7 @@ func Test_RequireAuthentication_Encrypted(t *testing.T){
 func Test_RequireAuthentication(t *testing.T){
 
 	config := &TinyAuthConfig{
-		Secret: "ABRACADABRA12345",
+		Secret: "",
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
 	}
@@ -72,18 +79,9 @@ func Test_RequireAuthentication(t *testing.T){
 
 	response := httptest.NewRecorder()
 
-	request.Header.Add("Authorization", "Basic YWRtaW46Y0p0UFFLYzJ2N0xNYkFNT1RWQmhvMHU2bXVzPQ==")
+	request.Header.Add(config.AuthorizationKey, tauth.Encoder.Encode("admin", "password"))
 
 	tauth.CredentialStore.Load(Credential{"admin", "password"})
-
-	if tauth.CredentialStore.All()[0].Username != "admin" {
-		t.Error("There's something wrong with Credential Store implementation")
-	}
-
-	found, err := tauth.CredentialStore.FindUser("admin")
-	if err!= nil || !found.Valid() {
-		t.Error("user not Found")
-	}
 
 	handler(response, request)
 

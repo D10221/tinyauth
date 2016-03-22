@@ -43,3 +43,11 @@ func (config *TinyAuthConfig)Validate() error {
 	return nil
 }
 
+func NewConfig(secret string) *TinyAuthConfig {
+	return &TinyAuthConfig{
+		Secret: secret,
+		AuthorizationKey: "Authorization",
+		BasicScheme: "Basic ",
+	}
+}
+

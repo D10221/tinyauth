@@ -19,6 +19,7 @@ type TinyAuth struct {
 }
 
 func (t TinyAuth) RequireAuthentication(handler Handler) Handler {
+	// ...
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		credential, err := t.GetCredential(r)
@@ -27,15 +28,21 @@ func (t TinyAuth) RequireAuthentication(handler Handler) Handler {
 			log.Printf("Error: %s \n", err.Error())
 		}
 
-		if ok, err := t.AuthFunc(credential.Username, credential.Password); ok && (err == nil ) {
-			handler(w, r)
-		} else {
-			if err != nil {
-				//log.Printf("Error: %s", err.Error())
-			}
+		ok, err := t.Authenticate(credential)
+
+		if err != nil {
+			log.Printf("Error: %s", err.Error())
 			http.Error(w, "unauthorized", 401)
 			return
 		}
+
+		if !ok {
+			http.Error(w, "unauthorized", 401)
+			return
+
+		}
+
+		handler(w, r)
 	}
 }
 
@@ -45,23 +52,22 @@ func NewTinyAuth(config *TinyAuthConfig) *TinyAuth {
 		Config:config,
 		CredentialStore: &SimpleCredentialStore{},
 		Criptico: &DefaultCriptico{config.Secret},
-		Encoder: &DefaultEncoder{config: config},
+		Encoder: &DefaultEncoder{BasicScheme: config.BasicScheme},
 	}
-
 	return tAuth
 }
 
-func (t *TinyAuth) AuthFunc(username, password string) (bool, error )  {
+func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
 	found, err := t.CredentialStore.FindUser(username)
 	if err != nil {
-	return false, err
+		return false, err
 	}
 	if t.Config.Secret == "" {
-	return found.Username == username && found.Password == password, nil
+		return found.Username == username && found.Password == password, nil
 	}
 	currentPassword, err := t.Criptico.Decrypt(found.Password)
-	if err!= nil {
-	return false, err
+	if err != nil {
+		return false, err
 	}
 	return found.Username == username && currentPassword == password, nil
 }
@@ -99,11 +105,18 @@ func (t *TinyAuth) GetCredential(r *http.Request) (*Credential, error) {
 	return &Credential{parts[0], parts[1]}, nil
 }
 
+func (t TinyAuth) Authenticate(credential *Credential) (bool, error) {
 
-func (t TinyAuth) Authenticate(c *Credential) (bool, error) {
-	if t.AuthFunc == nil {
-		return false, errors.New(("No Authenticator found"))
+	if ! credential.Valid() {
+		return false, errors.New("Not found")
 	}
-	return t.AuthFunc(c.Username, c.Password)
+
+	ok, err := t.AuthFunc(credential.Username, credential.Password)
+
+	if err != nil {
+		return false, err
+	}
+
+	return ok, nil ;
 }
 

@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"bytes"
 	"errors"
 )
 
@@ -21,18 +20,11 @@ type DefaultCriptico struct {
 	Key string
 }
 
-func (c *DefaultCriptico) Encrypt(text string ) (string,error) {
-	b:=bytes.NewBufferString(c.Key).Bytes()
-	return encrypt(b, text)
-}
-
-func (c *DefaultCriptico) Decrypt(text string ) (string, error) {
-	return decrypt(bytes.NewBufferString(c.Key).Bytes(), text)
-}
-
 // encrypt string to base64 crypto using AES
-func encrypt(key []byte, text string) (string, error) {
-	// key := []byte(keyText)
+func (c *DefaultCriptico) Encrypt(text string ) (string,error) {
+
+	// key :=bytes.NewBufferString(c.Key).Bytes()
+	key := []byte(c.Key)
 	plaintext := []byte(text)
 
 	block, err := aes.NewCipher(key)
@@ -56,7 +48,10 @@ func encrypt(key []byte, text string) (string, error) {
 }
 
 // decrypt from base64 to decrypted string
-func decrypt(key []byte, cryptoText string) (string, error) {
+func (c *DefaultCriptico) Decrypt(cryptoText string ) (string, error) {
+
+	//key :=bytes.NewBufferString(c.Key).Bytes()
+	key := []byte(c.Key)
 	cipherText, _ := base64.URLEncoding.DecodeString(cryptoText)
 
 	block, err := aes.NewCipher(key)
@@ -79,3 +74,4 @@ func decrypt(key []byte, cryptoText string) (string, error) {
 
 	return fmt.Sprintf("%s", cipherText), nil
 }
+

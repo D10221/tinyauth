@@ -15,7 +15,7 @@ type CredentialStore interface {
 
 
 type SimpleCredentialStore struct {
-	all [] Credential
+	all []Credential
 }
 
 func (store *SimpleCredentialStore) All() []Credential {
