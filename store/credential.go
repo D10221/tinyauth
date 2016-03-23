@@ -1,5 +1,4 @@
-package tinyauth
-
+package store
 
 type Credential struct {
 	Username string

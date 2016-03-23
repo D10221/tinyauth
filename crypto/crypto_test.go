@@ -1,4 +1,4 @@
-package tinyauth
+package crypto
 
 import (
 	"testing"
@@ -40,3 +40,4 @@ func Test_Criptico_Bad_Key(t *testing.T){
 		t.Error("Should be empty")
 	}
 }
+

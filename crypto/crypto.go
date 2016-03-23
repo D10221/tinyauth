@@ -1,5 +1,5 @@
 // source: https://gist.github.com/manishtpatel/8222606
-package tinyauth
+package crypto
 
 import (
 	"crypto/aes"
@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"errors"
+	"log"
 )
 
 type Criptico interface {
@@ -62,6 +63,7 @@ func (c *DefaultCriptico) Decrypt(cryptoText string ) (string, error) {
 	// The IV needs to be unique, but not secure. Therefore it's common to
 	// include it at the beginning of the cipher text.
 	if len(cipherText) < aes.BlockSize {
+		log.Printf("cipherText: %s ", cipherText)
 		return "", errors.New("ciphertext too short")
 	}
 	iv := cipherText[:aes.BlockSize]

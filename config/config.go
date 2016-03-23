@@ -1,4 +1,4 @@
-package tinyauth
+package config
 
 import (
 	"io/ioutil"
@@ -41,6 +41,11 @@ func (config *TinyAuthConfig)Validate() error {
 	}
 
 	return nil
+}
+
+func (config *TinyAuthConfig)Valid() bool {
+	e:= config.Validate()
+	return e == nil
 }
 
 func NewConfig(secret string) *TinyAuthConfig {

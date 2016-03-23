@@ -1,9 +1,8 @@
-package tinyauth
+package encoder
 
 import (
 	"encoding/base64"
 	"strings"
-	"errors"
 )
 
 type Encoder interface {
@@ -20,10 +19,7 @@ func (enc *DefaultEncoder) Encode(left, right string) string {
 }
 
 func (enc *DefaultEncoder) Decode(auth string) (decoded string, err error) {
-	s, e := enc.skipScheme(auth)
-	if e != nil {
-		return "", e
-	}
+	s := enc.skipScheme(auth)
 	b, e := base64.StdEncoding.DecodeString(s)
 	if e != nil {
 		return "", e
@@ -32,9 +28,11 @@ func (enc *DefaultEncoder) Decode(auth string) (decoded string, err error) {
 }
 
 
-func (encoder *DefaultEncoder) skipScheme(auth string) (string, error) {
+func (encoder *DefaultEncoder) skipScheme(auth string) (string) {
 	if strings.HasPrefix(auth, encoder.BasicScheme) {
-		return auth[len(encoder.BasicScheme):], nil
+		return auth[len(encoder.BasicScheme):]
 	}
-	return "", errors.New("No Scheme")
+	return auth
 }
+
+

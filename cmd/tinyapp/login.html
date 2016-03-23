@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title }}</title>
+</head>
+<body>
+    <form action="{{ .FormAction }}" method="post">
+        <div>
+            <label for="username" > Username: </label>
+            <input id="username" name="username" type="text" value="{{ .Credential.Username}}">
+        </div>
+        <div>
+            <label for="password" > Password: </label>
+            <input id="password" name="password" type="password" value="{{ .Credential.Password }}">
+        </div>
+        <div>
+            <button type="submit"> Login </button>
+        </div>
+    </form>
+</body>
+</html>

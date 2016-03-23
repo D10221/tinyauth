@@ -1,4 +1,4 @@
-package tinyauth
+package store
 
 import (
 	"testing"

@@ -5,6 +5,10 @@ import (
 	"strings"
 	"errors"
 	"log"
+	"github.com/D10221/tinyauth/config"
+	"github.com/D10221/tinyauth/crypto"
+	"github.com/D10221/tinyauth/store"
+	"github.com/D10221/tinyauth/encoder"
 )
 
 type Handler func(w http.ResponseWriter, r *http.Request);
@@ -12,26 +16,26 @@ type Handler func(w http.ResponseWriter, r *http.Request);
 type Authenticator func(u, p string) (bool, error);
 
 type TinyAuth struct {
-	Config          *TinyAuthConfig
-	Criptico        Criptico
-	CredentialStore CredentialStore
-	Encoder         Encoder
+	Config          *config.TinyAuthConfig
+	Criptico        crypto.Criptico
+	CredentialStore store.CredentialStore
+	Encoder         encoder.Encoder
 }
 
 func (t TinyAuth) RequireAuthentication(handler Handler) Handler {
 	// ...
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		credential, err := t.GetCredential(r)
+		credential, err := t.GetRequestCredentials(r)
 
 		if err != nil {
-			log.Printf("Error: %s \n", err.Error())
+			log.Printf("RequireAuthentication: Error: %s \n", err.Error())
 		}
 
 		ok, err := t.Authenticate(credential)
 
 		if err != nil {
-			log.Printf("Error: %s", err.Error())
+			log.Printf("RequireAuthentication: Error: %s", err.Error())
 			http.Error(w, "unauthorized", 401)
 			return
 		}
@@ -46,25 +50,29 @@ func (t TinyAuth) RequireAuthentication(handler Handler) Handler {
 	}
 }
 
-func NewTinyAuth(config *TinyAuthConfig) *TinyAuth {
+func NewTinyAuth(config *config.TinyAuthConfig) *TinyAuth {
 
 	tAuth := &TinyAuth{
 		Config:config,
-		CredentialStore: &SimpleCredentialStore{},
-		Criptico: &DefaultCriptico{config.Secret},
-		Encoder: &DefaultEncoder{BasicScheme: config.BasicScheme},
+		CredentialStore: &store.SimpleCredentialStore{},
+		Criptico: &crypto.DefaultCriptico{config.Secret},
+		Encoder: &encoder.DefaultEncoder{BasicScheme: config.BasicScheme},
 	}
 	return tAuth
 }
 
+
 func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
-	found, err := t.CredentialStore.FindUser(username)
-	if err != nil {
-		return false, err
+
+	found := t.CredentialStore.FindUser(username)
+	if !found.Valid() {
+		return false , nil
 	}
+
 	if t.Config.Secret == "" {
 		return found.Username == username && found.Password == password, nil
 	}
+
 	currentPassword, err := t.Criptico.Decrypt(found.Password)
 	if err != nil {
 		return false, err
@@ -72,51 +80,77 @@ func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
 	return found.Username == username && currentPassword == password, nil
 }
 
-func (t *TinyAuth)NewCredential(username, password string) *Credential {
+func (t *TinyAuth)NewCredential(username, password string) (*store.Credential, error) {
 
 	if t.Config.Secret == "" {
-		return &Credential{username, password}
+		return &store.Credential{username, password}, nil
 	}
 
 	password, err := t.Criptico.Encrypt(password)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return &Credential{username, password}
+	return &store.Credential{username, password} , nil
 }
 
-func (t *TinyAuth) GetCredential(r *http.Request) (*Credential, error) {
+func (t *TinyAuth) GetRequestCredentials(r *http.Request) (*store.Credential, error) {
 
 	if t.Config.AuthorizationKey == "" {
-		//log.Println("Warning no config.Current.AuthorizationKey")
+		log.Println("Warning no AuthorizationKey")
 	}
 
 	auth := r.Header.Get(t.Config.AuthorizationKey)
 
 	decoded, e := t.Encoder.Decode(auth)
 	if e != nil {
-		return &Credential{}, e
+		return &store.Credential{}, e
 	}
 	parts := strings.Split(decoded, ":")
 	if len(parts) < 2 {
-		return &Credential{}, e
+		return &store.Credential{}, e
 	}
-	return &Credential{parts[0], parts[1]}, nil
+	return &store.Credential{parts[0], parts[1]}, nil
 }
 
-func (t TinyAuth) Authenticate(credential *Credential) (bool, error) {
+func (t *TinyAuth) GetFormCredentials(r *http.Request) (*store.Credential, error) {
+
+	if t.Config.AuthorizationKey == "" {
+		log.Println("Warning no AuthorizationKey")
+	}
+
+	username := r.Form.Get("username")
+	password := r.Form.Get("password")
+
+	return &store.Credential{username, password}, nil
+}
+
+func (t TinyAuth) Authenticate(credential *store.Credential) (bool, error) {
 
 	if ! credential.Valid() {
-		return false, errors.New("Not found")
+		return false, errors.New("Credential not valid")
 	}
 
 	ok, err := t.AuthFunc(credential.Username, credential.Password)
 
-	if err != nil {
-		return false, err
-	}
+	if err == nil { return ok, nil 	}
 
-	return ok, nil ;
+	return false, err
+}
+
+
+
+func (t *TinyAuth) LoadConfig(path string) error{
+	e:= t.Config.LoadConfig(path)
+	if e!= nil {
+		return e
+	}
+	if t.Config.Secret!= "" {
+		t.Criptico = &crypto.DefaultCriptico{t.Config.Secret}
+	}
+	if t.Config.BasicScheme != "" {
+		t.Encoder = &encoder.DefaultEncoder{BasicScheme: t.Config.BasicScheme}
+	}
+	return nil
 }
 

@@ -2,55 +2,63 @@ package main
 
 import (
 	"net/http"
-	"fmt"
-	"github.com/D10221/tinyauth"
 	"log"
-	"path/filepath"
-	"os"
+	"github.com/D10221/tinyauth"
+	"github.com/D10221/tinyauth/config"
+	"github.com/D10221/tinyauth/cmd/tinyapp"
+	// "github.com/gorilla/mux"
+	"github.com/D10221/tinyauth/store"
 )
 
-func Hello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "200 OK")
-}
-
 func main() {
-	http.HandleFunc("/", app.Auth.RequireAuthentication(Hello))
-	address := ":8080"
-	log.Printf("ListenAndServe: %v", address)
-	http.ListenAndServe(address, nil)
-}
 
-type TinyApp struct {
-	Auth *tinyauth.TinyAuth
-}
-var app = &TinyApp {}
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-func init() {
+	var app = &tinyapp.TinyApp {Templates: "cmd/tinyapp"}
 
-	config:= tinyauth.NewConfig("")
+	config := config.NewConfig("")
 
 	app.Auth = tinyauth.NewTinyAuth(config)
 
-	dir, e:= os.Getwd()
-	if e!= nil {
+	e := app.Auth.LoadConfig(app.MakePath("cmd/tinyapp/config.json"))
+
+	if e != nil {
 		panic(e)
 	}
 
-	e= app.Auth.Config.LoadConfig(filepath.Join(dir,"cmd/web/config.json"))
-
-	if e!= nil {
-		panic(e)
-	}
-	if e = app.Auth.Config.Validate() ; e!=nil {
-		panic(e)
-	}
-	if e= app.Auth.Config.Validate(); e!= nil {
+	if e = app.Auth.Config.Validate(); e != nil {
 		panic(e)
 	}
 
-	e = app.Auth.CredentialStore.LoadJson(filepath.Join(dir, "testdata/credentials.json"))
+	e = app.Auth.CredentialStore.LoadJson(app.MakePath("cmd/tinyapp/credentials.json"))
 
-	if e!= nil {
+	if e != nil {
 		panic(e)
 	}
+
+	changePassword:= func(in *store.Credential) *store.Credential{
+		password, e := app.Auth.Criptico.Encrypt(in.Password)
+		if e!=nil {
+			panic(e)
+		}
+		in.Password = password
+		return in
+	}
+
+	app.Auth.CredentialStore.Update(changePassword)
+
+	for _, c := range app.Auth.CredentialStore.All()[:]{
+		log.Printf("Credentials: %v" , c)
+	}
+
+	log.Println(app.Auth.Config)
+	log.Println(app.Auth.CredentialStore.All())
+	//m:= mux.NewRouter()
+	http.HandleFunc("/login", app.Login )
+	http.HandleFunc("/authenticate", app.Authenticate)
+	http.HandleFunc("/secret", app.Auth.RequireAuthentication(app.Secret))
+	// http.Handle("/", m)
+	address := ":8080"
+	log.Printf("ListenAndServe: %v", address)
+	http.ListenAndServe(address, nil)
 }
