@@ -61,6 +61,7 @@ func (app *TinyApp) CurrentDir() string {
 	return dir
 }
 
+// Nice: thanks to : http://stackoverflow.com/a/25927915/1901532
 func trace() {
 	pc := make([]uintptr, 1)  // at least 1 entry needed
 	runtime.Callers(2, pc)
@@ -84,14 +85,10 @@ func (app *TinyApp) Authenticate(w http.ResponseWriter, r *http.Request) {
 	credential, err := app.Auth.GetFormCredentials(r)
 
 	if !credential.Valid(){
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
 		log.Printf("No Credentials")
 		return
 	}
-	log.Print(credential)
-
-	found := app.Auth.CredentialStore.FindUser(credential.Username)
-	log.Printf("Found: %v", found)
 
 	ok, err:= app.Auth.Authenticate(credential)
 	if err!=nil {
@@ -99,9 +96,10 @@ func (app *TinyApp) Authenticate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500 )
 		return
 	}
+
 	if !ok {
 		log.Printf("Bad Credentials")
-		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
 		return
 	}
 

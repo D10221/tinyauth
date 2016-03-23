@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"io"
 	"github.com/D10221/tinyauth"
+	"github.com/D10221/tinyauth/config"
 )
 
 type Options struct {
@@ -39,7 +40,7 @@ type TinyApp struct {
 
 func main() {
 
-	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&config.TinyAuthConfig{
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",

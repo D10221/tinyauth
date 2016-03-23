@@ -9,7 +9,8 @@ import (
 type CredentialStore interface {
 	All() []*Credential
 	Load(credentials ...*Credential)
-	FindUser(userName string) *Credential
+	FindByUserName(userName string) (*Credential, error)
+	FindBy(c CredentialComparison) (*Credential, error)
 	LoadJson(path string) error
 	Add(credential *Credential) error
 	Remove(credential *Credential) error
@@ -22,13 +23,6 @@ type CredentialStoreError struct {
 	Code int
 }
 
-func (e *CredentialStoreError) Error() string {
-	return e.message;
-}
-
-func NewCredentialStoreError(message string , code int ) *CredentialStoreError {
-	return &CredentialStoreError{message, code}
-}
 
 type SimpleCredentialStore struct {
 	all []*Credential
@@ -38,7 +32,7 @@ func (store *SimpleCredentialStore) All() []*Credential {
 	return store.all
 }
 
-func (store *SimpleCredentialStore) FindUser(userName string) *Credential {
+/*func (store *SimpleCredentialStore) FindUser(userName string) *Credential {
 	found := &Credential{}
 	for _, credential := range store.All()[:] {
 		if userName == credential.Username {
@@ -47,10 +41,10 @@ func (store *SimpleCredentialStore) FindUser(userName string) *Credential {
 		}
 	}
 	return found
-}
+}*/
 
 
-func (store *SimpleCredentialStore) FindValidUser(userName string) (*Credential, error) {
+func (store *SimpleCredentialStore) FindByUserName(userName string) (*Credential, error) {
 	found := &Credential{}
 	for _, credential := range store.All()[:] {
 		if userName == credential.Username {
@@ -61,7 +55,8 @@ func (store *SimpleCredentialStore) FindValidUser(userName string) (*Credential,
 	if found.Valid() {
 		return found, nil
 	}
-	return found, NewCredentialStoreError("Credential Not Found", 404)
+
+	return found, NotFound
 }
 /*
 func FilterCredentialStoreErrorNotFound(err error) error {
@@ -99,7 +94,10 @@ func (store *SimpleCredentialStore) Add(credential *Credential) error {
 	if !credential.Valid() {
 		return InvalidCredential
 	}
-	found := store.FindUser(credential.Username)
+	found, e := store.FindByUserName(credential.Username)
+	if e!=nil && e!= NotFound {
+		return e
+	}
 	if found.Valid() {
 		return AlreadyExists
 	}
@@ -136,6 +134,18 @@ func (store *SimpleCredentialStore) Update(transform func(in *Credential) *Crede
 		}
 	}
 	store.all = all
+	//TODO: errors
 	return nil
+}
+
+func(store *SimpleCredentialStore) FindBy(c CredentialValidation) (*Credential, error){
+	found:= &Credential{}
+	for _, item := range store.all {
+		if c(item) {
+			found = item
+		}
+	}
+	if found.Valid() { return found, nil  }
+	return nil , NotFound
 }
 

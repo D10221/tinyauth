@@ -23,7 +23,13 @@ func Test_Config_Valid(t *testing.T){
 		t.Error(e)
 	}
 
-	e= config.LoadConfig(filepath.Join(dir, "testdata/config.json"))
+	path:= filepath.Join(dir, "../testdata/config.json")
+	if _, e = os.Stat(path) ; os.IsNotExist(e) {
+		t.Log("Make sure you trun test from root package dir")
+		t.Error(e)
+		return;
+	}
+	e= config.LoadConfig(path)
 
 	if e!=nil {
 		t.Error(e)

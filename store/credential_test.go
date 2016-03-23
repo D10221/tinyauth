@@ -24,5 +24,44 @@ func Test_Is_Valid_Credential(t *testing.T){
 	}
 }
 
+func Test_AreEqual(t *testing.T) {
+
+	if AreEqual(&Credential{"A", "x"},&Credential{"A", "x1"}) {
+		t.Error("They Are Not Equal")
+	}
+	if AreEqual(&Credential{"B", "x"},&Credential{"A", "x"}) {
+		t.Error("They Are Not Equal")
+	}
+	if AreEqual(&Credential{"A", "x"},&Credential{}) {
+		t.Error("They Are Not Equal")
+	}
+	if !AreEqual(&Credential{"A", "x"},&Credential{"A", "x"}) {
+		t.Error("They Are Equal")
+	}
+	if !AreEqual(&Credential{},&Credential{}) {
+		t.Error("They Are Equal")
+	}
+	if AreEqual(nil,&Credential{}) {
+		t.Error("They Are Not Equal")
+	}
+	if AreEqual(&Credential{},nil) {
+		t.Error("They Are Not Equal")
+	}
+	if !AreEqual(nil,nil) {
+		t.Error("They Are Equal")
+	}
+}
+
+func Test_ByName(t *testing.T){
+	ok:= AreNamesEqual(&Credential{}, &Credential{})
+	if !ok {
+		t.Error("It Should")
+	}
+	ok= AreNamesEqual(&Credential{}, &Credential{"A", "X"})
+	if ok {
+		t.Error("It Shouldn't")
+	}
+}
+
 
 

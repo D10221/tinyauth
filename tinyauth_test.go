@@ -73,9 +73,9 @@ func Test_RequireAuthentication_Encrypted(t *testing.T){
 
 	tAuth.CredentialStore.Load( &store.Credential{"admin", pwd})
 
-	found:= tAuth.CredentialStore.FindUser("admin")
-	if !found.Valid() {
-		t.Error("user not Found")
+	found, e := tAuth.CredentialStore.FindByUserName("admin")
+	if e!=nil && e!= store.NotFound || !found.Valid() {
+		t.Error("Credential not Found")
 	}
 
 	handler(response, request)

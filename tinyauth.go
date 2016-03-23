@@ -64,11 +64,10 @@ func NewTinyAuth(config *config.TinyAuthConfig) *TinyAuth {
 
 func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
 
-	found := t.CredentialStore.FindUser(username)
-	if !found.Valid() {
-		return false , nil
+	found, e := t.CredentialStore.FindByUserName(username)
+	if e!=nil && e!= store.NotFound  || !found.Valid() {
+		return false, nil
 	}
-
 	if t.Config.Secret == "" {
 		return found.Username == username && found.Password == password, nil
 	}

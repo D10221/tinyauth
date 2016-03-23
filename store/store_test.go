@@ -16,7 +16,8 @@ func Test_Store(t *testing.T) {
 		t.Error("Bad Store")
 	}
 
-	credential := store.FindUser("admin")
+	credential, e := store.FindByUserName("admin")
+	if e!=nil { t.Error(e) ;return }
 
 	if credential.Username != "admin" || credential.Password != "password" {
 		t.Error("Bad store")
@@ -24,7 +25,9 @@ func Test_Store(t *testing.T) {
 
 	store.Load(&Credential{Username: "me", Password:"1234"})
 
-	user := store.FindUser("me")
+	user, e := store.FindByUserName("me")
+
+	if e!=nil { t.Error(e) ;return }
 
 	if user.Username != "me" {
 		t.Error("Not found")
@@ -61,7 +64,8 @@ func Test_Store_json_load(t *testing.T) {
 		t.Error("Bad Store")
 	}
 
-	credential := store.FindUser("admin")
+	credential ,e := store.FindByUserName("admin")
+	if e!=nil { t.Error(e) ;return }
 
 	if credential.Username != "admin" || credential.Password != "P@55w0rd!" {
 		t.Error("Bad store")
@@ -69,7 +73,8 @@ func Test_Store_json_load(t *testing.T) {
 
 	store.Load(&Credential{Username: "me", Password:"1234"})
 
-	user := store.FindUser("me")
+	user, e := store.FindByUserName("me")
+	if e!=nil { t.Error(e) ;return }
 
 	if user.Username != "me" {
 		t.Error("Not found")
@@ -173,7 +178,7 @@ func Test_Remove_Add(t *testing.T) {
 	if store.All()[0].Username != "me" && store.All()[0].Password != "4321" {
 		t.Error("Wrong values")
 	}
-	if u:= store.FindUser("me") ; !u.Valid() || u.Username!= "me" ||  u.Password!= "4321" {
+	if u, e:= store.FindByUserName("me") ; e!= nil && !u.Valid() || u.Username!= "me" ||  u.Password!= "4321" {
 		t.Error("Wtf")
 	}
 }
@@ -198,4 +203,18 @@ func Test_Update(t *testing.T){
 	if  len(store.All()) != 1 || store.All()[0].Password!= "abcd" {
 		t.Error("Doesn't work")
 	}
+}
+
+func Test_FindBy(t *testing.T){
+	store:= SimpleCredentialStore{}
+	e:= store.Add(&Credential{"me", "1234"})
+	if e!=nil { t.Error(e) ; return }
+	found, e := store.FindBy(ByName("me"))
+	if e !=nil || ! found.Valid(){
+		t.Error(e)
+	}
+	if found.Username != "me" {
+		t.Error("Wtf")
+	}
+
 }

@@ -7,13 +7,14 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/D10221/tinyauth"
+	"github.com/D10221/tinyauth/config"
 )
 
 func Test_TinyAUthTool_NoTask(t *testing.T){
 	args:= make([]string, 0)
 	// append(args, "--config:=")
 	// args:= [...]string { "-task=encode", "-left=me" , "-right=me" , "-config=.noconfig.json"}
-	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&config.TinyAuthConfig{
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
@@ -30,7 +31,7 @@ func Test_TinyAUthTool_NoTask(t *testing.T){
 
 func Test_TinyAUthTool(t *testing.T){
 
-	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&config.TinyAuthConfig{
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
@@ -53,7 +54,7 @@ func Test_TinyAUthTool(t *testing.T){
 
 func Test_TinyAUthLoadConfig(t *testing.T){
 
-	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&config.TinyAuthConfig{
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
@@ -77,7 +78,7 @@ func Test_TinyAUthLoadConfig(t *testing.T){
 func Test_TinyauthCantFindConfig(t *testing.T){
 
 	args:= [...]string { "-task=encode", "-left=me" , "-right=me" , "-config=.noconfig.json"}
-	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&config.TinyAuthConfig{
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
@@ -109,7 +110,7 @@ func Test_BonkCode(t *testing.T){
 
 func Test_TinyAUthLoadBadConfig(t *testing.T){
 
-	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&tinyauth.TinyAuthConfig{
+	var app = &TinyApp{Auth : tinyauth.NewTinyAuth(&config.TinyAuthConfig{
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
