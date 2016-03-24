@@ -61,6 +61,14 @@ func Test_ByName(t *testing.T){
 	if ok {
 		t.Error("It Shouldn't")
 	}
+	ok= AreNamesEqual(nil, &Credential{"A", "X"})
+	if ok {
+		t.Error("It Shouldn't")
+	}
+	ok= AreNamesEqual(&Credential{"A", "X"}, nil)
+	if ok {
+		t.Error("It Shouldn't")
+	}
 }
 
 

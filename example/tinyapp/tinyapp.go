@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"fmt"
-	"runtime"
 	"github.com/D10221/tinyauth/store"
 )
 
@@ -62,49 +61,51 @@ func (app *TinyApp) CurrentDir() string {
 }
 
 // Nice: thanks to : http://stackoverflow.com/a/25927915/1901532
-func trace() {
+// needs import "runtime"
+/*func trace() {
 	pc := make([]uintptr, 1)  // at least 1 entry needed
 	runtime.Callers(2, pc)
 	f := runtime.FuncForPC(pc[0])
 	file, line := f.FileLine(pc[0])
 	fmt.Printf("%s:%d %s\n", file, line, f.Name())
-}
+}*/
 
 func (app *TinyApp) Authenticate(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != "POST" {
-		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
-		return
-	}
+	credential:= &store.Credential{}
 
-	if e:= r.ParseForm(); e!=nil {
-		log.Printf("Error: %s", e.Error())
-		http.Error(w, e.Error() , 500)
-	}
+	if r.Method == "POST" {
+		c,e := app.Auth.GetFormCredentials(r)
+		if  e != nil && e!= tinyauth.FormHasNoCredentials{
+			http.Error(w, e.Error() , 500)
+			return
+		}
+		credential = c
 
-	credential, err := app.Auth.GetFormCredentials(r)
-
-	if !credential.Valid(){
-		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
-		log.Printf("No Credentials")
-		return
+	} else if r.Method == "GET" {
+		c, e := app.Auth.GetRequestCredentials(r)
+		if  e != nil {
+			http.Error(w, e.Error() , 500)
+			return
+		}
+		credential = c
+	} else {
+		http.Error(w, "MethodNotAllowed" ,http.StatusMethodNotAllowed)
 	}
 
 	ok, err:= app.Auth.Authenticate(credential)
+
 	if err!=nil {
-		log.Printf("Error: %s", err.Error())
-		http.Error(w, err.Error(), 500 )
+		http.Error(w, err.Error(), 401 )
 		return
 	}
 
 	if !ok {
-		log.Printf("Bad Credentials")
-		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+		http.Error(w, err.Error(), 401 )
 		return
 	}
 
 	fmt.Fprintf(w, "%s: Ok", credential.Username)
-	log.Printf("%s: Ok", credential.Username)
 }
 
 func( app *TinyApp) Secret(w http.ResponseWriter, r *http.Request){
@@ -118,4 +119,11 @@ func (app *TinyApp) MakePath(path string) string {
 func (app *TinyApp) TemplatePath(path string) string {
 	return filepath.Join(app.CurrentDir(), app.Templates, path)
 }
+
+func (app *TinyApp) EncryptPassword (in *store.Credential) *store.Credential{
+	out, e := app.Auth.EncryptPassword(in)
+	if e!= nil {panic(e)}
+	return out
+}
+
 

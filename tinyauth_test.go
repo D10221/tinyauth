@@ -235,6 +235,31 @@ func Test_GetFormCredentials_Encrypted(t *testing.T){
 		testResponse:= ResponseTester(t)
 		testResponse(writer, http.StatusOK, "ok")
 	}
+	{
+		// Credentials Ok, PostForm, On Post
+		// Test 1 , good credentials
+		request, _ := http.NewRequest("POST", "/", nil)
+		request.PostForm = url.Values{}
+		request.PostForm.Add("username", "admin")
+		request.PostForm.Add("password", "password")
+		writer := httptest.NewRecorder()
+		handler(writer, request)
+		testResponse:= ResponseTester(t)
+		testResponse(writer, http.StatusOK, "ok")
+	}
+
+	{
+		// Credentials Ok, PostForm MISSING , On Post
+		// Test 1 , good credentials
+		request, _ := http.NewRequest("POST", "/", nil)
+		request.Form = url.Values{}
+		request.Form.Add("username", "admin")
+		request.Form.Add("password", "password")
+		writer := httptest.NewRecorder()
+		handler(writer, request)
+		testResponse:= ResponseTester(t)
+		testResponse(writer, http.StatusOK, "ok")
+	}
 
 	{
 		// Test2 Bad user
@@ -256,8 +281,8 @@ func Test_GetFormCredentials_Encrypted(t *testing.T){
 		request.Form.Add("password", "1234")
 		writer := httptest.NewRecorder()
 		handler(writer, request)
-		testResponse:= ResponseTester(t)
-		testResponse(writer, http.StatusUnauthorized, "unauthorized")
+		expect := ResponseTester(t)
+		expect(writer, http.StatusUnauthorized, "unauthorized")
 	}
 }
 
@@ -278,6 +303,22 @@ func ResponseTester (t *testing.T) ResponseTest {
 		if expectedBody != strings.TrimSpace(content){
 			t.Errorf("Expected body %s \n received: %s", expectedBody ,content)
 		}
+	}
+}
+
+func Test_Auth_Encode(t *testing.T){
+	auth:= NewTinyAuth(config.NewConfig("0123456789ABCDEF"))
+	key,value:= auth.Encode(&store.Credential{"admin", "password"})
+	if key != auth.Config.AuthorizationKey {
+		t.Error("Bad Key")
+	}
+	d,e:= auth.Encoder.Decode(value)
+	if e!=nil {
+		t.Error(e)
+		return
+	}
+	if d != "admin:password" {
+		t.Error("Bad Encoding")
 	}
 }
 

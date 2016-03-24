@@ -36,16 +36,8 @@ func main() {
 		panic(e)
 	}
 
-	changePassword:= func(in *store.Credential) *store.Credential{
-		password, e := app.Auth.Criptico.Encrypt(in.Password)
-		if e!=nil {
-			panic(e)
-		}
-		in.Password = password
-		return in
-	}
 
-	app.Auth.CredentialStore.Update(changePassword)
+	app.Auth.CredentialStore.UpdateAll(app.EncryptPassword)
 
 	for _, c := range app.Auth.CredentialStore.All()[:]{
 		log.Printf("Credentials: %v" , c)

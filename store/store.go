@@ -10,19 +10,20 @@ type CredentialStore interface {
 	All() []*Credential
 	Load(credentials ...*Credential)
 	FindByUserName(userName string) (*Credential, error)
-	FindBy(c CredentialComparison) (*Credential, error)
+	FindBy(c CredentialFilter) (*Credential, error)
 	LoadJson(path string) error
 	Add(credential *Credential) error
 	Remove(credential *Credential) error
+	RemoveWhere(f CredentialFilter) error
 	// Update all with Func
-	Update(transform func(in *Credential) *Credential) error
+	UpdateAll(transform func(in *Credential) *Credential) error
+	UpdateWhere(f CredentialFilter,transform CredentialMutator) error
 }
 
 type CredentialStoreError struct {
 	message string
-	Code int
+	Code    int
 }
-
 
 type SimpleCredentialStore struct {
 	all []*Credential
@@ -86,16 +87,18 @@ func (store *SimpleCredentialStore) Load(credentials ...*Credential) {
 	}
 }
 
-var InvalidCredential = errors.New("Invalid Credential")
-var NotFound = errors.New("Credential not found")
-var AlreadyExists = errors.New("Credential Already Exists")
+var (
+	InvalidCredential = errors.New("Invalid Credential")
+	NotFound = errors.New("Credential not found")
+	AlreadyExists = errors.New("Credential Already Exists")
+)
 
 func (store *SimpleCredentialStore) Add(credential *Credential) error {
 	if !credential.Valid() {
 		return InvalidCredential
 	}
 	found, e := store.FindByUserName(credential.Username)
-	if e!=nil && e!= NotFound {
+	if e != nil && e != NotFound {
 		return e
 	}
 	if found.Valid() {
@@ -109,8 +112,8 @@ func (store *SimpleCredentialStore) Remove(credential *Credential) error {
 	if !credential.Valid() {
 		return InvalidCredential
 	}
-	result:= make([]*Credential,0)
-	found:= false
+	result := make([]*Credential, 0)
+	found := false
 	for _, item := range store.all {
 		if item.Username == credential.Username {
 			found = true
@@ -125,27 +128,72 @@ func (store *SimpleCredentialStore) Remove(credential *Credential) error {
 	return nil
 }
 
-func (store *SimpleCredentialStore) Update(transform func(in *Credential) *Credential) error {
-	all := make([]*Credential,0)
+func (store *SimpleCredentialStore) RemoveWhere(f CredentialFilter) error {
+
+	result := make([]*Credential, 0)
+
+	found := false
 	for _, item := range store.all {
-		result:= transform(item)
-		if result.Valid(){
-			all = append(all, result)
+		if f(item){
+			found = true
+			continue
 		}
+		result = append(result, item)
 	}
-	store.all = all
-	//TODO: errors
+	if !found {
+		return NotFound
+	}
+	store.all = result
+	//TODO:
 	return nil
 }
 
-func(store *SimpleCredentialStore) FindBy(c CredentialValidation) (*Credential, error){
-	found:= &Credential{}
+func (store *SimpleCredentialStore) UpdateAll(transform func(in *Credential) *Credential) error {
+	all := make([]*Credential, 0)
+	var e error = nil
+	for _, item := range store.all {
+		result := transform(item)
+		if result.Valid() {
+			all = append(all, result)
+		} else {
+			e = InvalidCredential
+		}
+	}
+	if e == nil {
+		store.all = all
+	}
+
+	return e
+}
+
+func (store *SimpleCredentialStore) UpdateWhere(filter CredentialFilter,transform CredentialMutator) error {
+
+	all := make([]*Credential, 0)
+	var e error = NotFound
+	for _, item := range store.all {
+		if filter(item) {
+			result, err := transform(item)
+			all = append(all, result)
+			e = err
+		}
+	}
+	if e == nil {
+		store.all = all
+	}
+	return e
+}
+
+func (store *SimpleCredentialStore) FindBy(c CredentialFilter) (*Credential, error) {
+	found := &Credential{}
 	for _, item := range store.all {
 		if c(item) {
 			found = item
+			break
 		}
 	}
-	if found.Valid() { return found, nil  }
-	return nil , NotFound
+	if found.Valid() {
+		return found, nil
+	}
+	return found, NotFound
 }
 
