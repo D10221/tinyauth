@@ -11,7 +11,7 @@ type CredentialStore interface {
 	Load(credentials ...*Credential)
 	FindByUserName(userName string) (*Credential, error)
 	FindBy(c CredentialFilter) (*Credential, error)
-	LoadJson(path string) error
+	//LoadJson(path string) error
 	Add(credential *Credential) error
 	Remove(credential *Credential) error
 	RemoveWhere(f CredentialFilter) error
@@ -67,6 +67,8 @@ func FilterCredentialStoreErrorNotFound(err error) error {
 	}
 	return err
 }*/
+
+// Specific t0 SimpleCredentialStore
 func (store *SimpleCredentialStore) LoadJson(path string) error {
 
 	bytes, e := ioutil.ReadFile(path)

@@ -1,4 +1,4 @@
-package tinyauth
+package tinyauth_test
 
 import (
 	"testing"
@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"github.com/D10221/tinyauth"
 	"github.com/D10221/tinyauth/config"
 	"github.com/D10221/tinyauth/store"
 )
 func Test_Config(t *testing.T){
 	// TODO:
 	config:= config.NewConfig("1234567890ABCDEF")
-	auth:= &TinyAuth{Config: config}
+	auth:= &tinyauth.TinyAuth{Config: config}
 	if auth.Config.Secret == "" {
 		t.Error("Config not Loaded")
 	}
@@ -23,7 +24,7 @@ func Test_Config(t *testing.T){
 		t.Error("Config not Loaded")
 	}
 
-	auth = NewTinyAuth(config)
+	auth = tinyauth.NewTinyAuth(config, nil)
 
 	if auth.Config.Secret != "1234567890ABCDEF" {
 		t.Error("Config not Loaded")
@@ -50,7 +51,7 @@ func Test_RequireAuthentication_Encrypted(t *testing.T){
 		BasicScheme: "Basic ",
 	}
 
-	tAuth:= NewTinyAuth(config)
+	tAuth:= tinyauth.NewTinyAuth(config, nil )
 
 	wrapped:= func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "ok")
@@ -101,7 +102,7 @@ func Test_RequireAuthentication(t *testing.T){
 		BasicScheme: "Basic ",
 	}
 
-	tauth:=  NewTinyAuth(config)
+	tauth:=  tinyauth.NewTinyAuth(config, nil )
 
 	wrapped:= func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "ok")
@@ -140,7 +141,7 @@ func Test_GetFormCredentials(t *testing.T){
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
 	}
-	auth :=  NewTinyAuth(config)
+	auth :=  tinyauth.NewTinyAuth(config, nil )
 	auth.CredentialStore.Load(&store.Credential{"admin", "password"})
 
 	// prep Request
@@ -195,7 +196,7 @@ func Test_GetFormCredentials_Encrypted(t *testing.T){
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
 	}
-	auth :=  NewTinyAuth(config)
+	auth :=  tinyauth.NewTinyAuth(config, nil )
 	password, e:= auth.Criptico.Encrypt("password")
 	if e!=nil {
 		t.Error(e)
@@ -307,7 +308,7 @@ func ResponseTester (t *testing.T) ResponseTest {
 }
 
 func Test_Auth_Encode(t *testing.T){
-	auth:= NewTinyAuth(config.NewConfig("0123456789ABCDEF"))
+	auth:= tinyauth.NewTinyAuth(config.NewConfig("0123456789ABCDEF"), nil )
 	key,value:= auth.Encode(&store.Credential{"admin", "password"})
 	if key != auth.Config.AuthorizationKey {
 		t.Error("Bad Key")

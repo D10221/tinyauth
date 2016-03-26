@@ -17,6 +17,7 @@ type TinyApp struct {
 	Templates  string
 }
 
+// A view:
 func (app *TinyApp) Login(w http.ResponseWriter, r *http.Request) {
 
 	t, e := template.ParseFiles(app.TemplatePath("login.html"))
@@ -124,6 +125,7 @@ func (app *TinyApp) EncryptPassword (in *store.Credential) (*store.Credential, e
 	return  app.Auth.EncryptPassword(in)
 }
 
+// ...
 
 type Token struct {
 

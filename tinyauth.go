@@ -52,11 +52,15 @@ func (t TinyAuth) RequireAuthentication(handler Handler) Handler {
 	}
 }
 
-func NewTinyAuth(config *config.TinyAuthConfig) *TinyAuth {
+func NewTinyAuth(config *config.TinyAuthConfig, astore store.CredentialStore) *TinyAuth {
+
+	if astore == nil {
+		astore = &store.SimpleCredentialStore{}
+	}
 
 	tAuth := &TinyAuth{
 		Config:config,
-		CredentialStore: &store.SimpleCredentialStore{},
+		CredentialStore: astore,
 		Criptico: &crypto.DefaultCriptico{config.Secret},
 		Encoder: &encoder.DefaultEncoder{BasicScheme: config.BasicScheme},
 	}

@@ -44,7 +44,7 @@ func main() {
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
-	})}
+	}, nil)}
 
 	e := app.ParseCommandLine(os.Args[1:])
 	if e != nil {

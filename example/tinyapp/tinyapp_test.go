@@ -14,7 +14,7 @@ import (
 
 func Test_TinyApp(t *testing.T){
 
-	app:=  &TinyApp{Auth: tinyauth.NewTinyAuth( config.NewConfig("0123456789ABCDEF"))}
+	app:=  &TinyApp{Auth: tinyauth.NewTinyAuth( config.NewConfig("0123456789ABCDEF"), nil)}
 
 	if app.Auth.Config.Secret == "" {
 		t.Error("No Secret")
@@ -39,7 +39,7 @@ func Test_TinyApp(t *testing.T){
 
 func Test_TinyApp_Config(t *testing.T){
 
-	app:=  &TinyApp{Auth: tinyauth.NewTinyAuth( &config.TinyAuthConfig{})}
+	app:=  &TinyApp{Auth: tinyauth.NewTinyAuth( &config.TinyAuthConfig{}, nil)}
 
 	log.Printf("App Dir: %s", app.CurrentDir())
 
@@ -82,7 +82,7 @@ func Test_TinyApp_Config(t *testing.T){
 
 func Test_TinyApp_NoEncryption(t *testing.T){
 
-	app:=  &TinyApp{Auth: tinyauth.NewTinyAuth( &config.TinyAuthConfig{})}
+	app:=  &TinyApp{Auth: tinyauth.NewTinyAuth( &config.TinyAuthConfig{}, nil)}
 
 	if app.Auth.Config.Secret != "" {
 		t.Error("Should not have Secret")
@@ -134,7 +134,7 @@ func copyValues(dst, src url.Values) {
 
 func Test_Authenticate(t *testing.T){
 
-	app:= &TinyApp{Auth: tinyauth.NewTinyAuth(config.NewConfig("0123456789ABCDEF"))}
+	app:= &TinyApp{Auth: tinyauth.NewTinyAuth(config.NewConfig("0123456789ABCDEF"), nil)}
 	app.Auth.CredentialStore.Add(&store.Credential{"admin", "password"})
 	app.Auth.CredentialStore.UpdateWhere(store.ByName("admin"), app.Auth.EncryptPassword )
 	ok, err:= app.Auth.Authenticate(&store.Credential{"admin", "password"})

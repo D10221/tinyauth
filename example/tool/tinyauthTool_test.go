@@ -18,7 +18,7 @@ func Test_TinyAUthTool_NoTask(t *testing.T){
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
-	})}
+	}, nil)}
 	e:= app.ParseCommandLine(args)
 	if e != nil {
 		t.Errorf("it shouldn't fail %s", e.Error())
@@ -35,7 +35,7 @@ func Test_TinyAUthTool(t *testing.T){
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
-	})}
+	}, nil)}
 	args:= [...]string { "-task=encode", "-left=me" , "-right=me"}
 	e:= app.ParseCommandLine(args[:])
 	if e != nil {
@@ -58,7 +58,7 @@ func Test_TinyAUthLoadConfig(t *testing.T){
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
-	})}
+	}, nil)}
 
 	args:= [...]string { "-task=encode", "-left=me" , "-right=me" , "-config=config.json"}
 	e:= app.ParseCommandLine(args[:])
@@ -82,7 +82,7 @@ func Test_TinyauthCantFindConfig(t *testing.T){
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
-	})}
+	}, nil)}
 
 	e:= app.ParseCommandLine(args[:])
 	if e != nil {
@@ -114,7 +114,7 @@ func Test_TinyAUthLoadBadConfig(t *testing.T){
 		Secret: "", // ABRACADABRA12345
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
-	})}
+	}, nil)}
 
 	args:= [...]string { "-task=encode", "-left=me" , "-right=me" , "-config=../../testdata/badconfig.json"}
 	e:= app.ParseCommandLine(args[:])

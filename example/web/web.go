@@ -5,6 +5,7 @@ import (
 	"log"
 	"github.com/D10221/tinyauth"
 	"github.com/D10221/tinyauth/config"
+	"github.com/D10221/tinyauth/store"
 	"github.com/D10221/tinyauth/example/tinyapp"
 	// "github.com/gorilla/mux"
 )
@@ -17,7 +18,8 @@ func main() {
 
 	config := config.NewConfig("")
 
-	app.Auth = tinyauth.NewTinyAuth(config)
+	store:= &store.SimpleCredentialStore{}
+	app.Auth = tinyauth.NewTinyAuth(config, store)
 
 	e := app.Auth.LoadConfig(app.MakePath("example/tinyapp/config.json"))
 
@@ -29,11 +31,8 @@ func main() {
 		panic(e)
 	}
 
-	e = app.Auth.CredentialStore.LoadJson(app.MakePath("example/tinyapp/credentials.json"))
-
-	if e != nil {
-		panic(e)
-	}
+	e = store.LoadJson(app.MakePath("example/tinyapp/credentials.json"))
+	if e != nil { panic(e)	}
 
 
 	app.Auth.CredentialStore.UpdateAll(app.EncryptPassword)
