@@ -7,20 +7,19 @@ import (
 	"github.com/D10221/tinyauth/config"
 	"github.com/D10221/tinyauth/example/tinyapp"
 	// "github.com/gorilla/mux"
-	"github.com/D10221/tinyauth/store"
 )
 
 func main() {
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	var app = &tinyapp.TinyApp {Templates: "cmd/tinyapp"}
+	var app = &tinyapp.TinyApp {Templates: "example/tinyapp"}
 
 	config := config.NewConfig("")
 
 	app.Auth = tinyauth.NewTinyAuth(config)
 
-	e := app.Auth.LoadConfig(app.MakePath("cmd/tinyapp/config.json"))
+	e := app.Auth.LoadConfig(app.MakePath("example/tinyapp/config.json"))
 
 	if e != nil {
 		panic(e)
@@ -30,7 +29,7 @@ func main() {
 		panic(e)
 	}
 
-	e = app.Auth.CredentialStore.LoadJson(app.MakePath("cmd/tinyapp/credentials.json"))
+	e = app.Auth.CredentialStore.LoadJson(app.MakePath("example/tinyapp/credentials.json"))
 
 	if e != nil {
 		panic(e)
@@ -49,8 +48,15 @@ func main() {
 	http.HandleFunc("/login", app.Login )
 	http.HandleFunc("/authenticate", app.Authenticate)
 	http.HandleFunc("/secret", app.Auth.RequireAuthentication(app.Secret))
+	//Static
+
+	path:= app.MakePath("/example/web/static")
+	log.Printf("Serving static: %s", app.MakePath("/example/web/static"))
+	fs := http.FileServer(http.Dir(path))
+	http.Handle("/", fs)
+
 	// http.Handle("/", m)
 	address := ":8080"
-	log.Printf("ListenAndServe: %v", address)
+	log.Printf("Serving : %v", address)
 	http.ListenAndServe(address, nil)
 }

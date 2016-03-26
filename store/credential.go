@@ -8,7 +8,7 @@ type Credential struct {
 
 // Must contain valid values
 func (cred *Credential) Valid() bool {
-	return cred.Username != "" && cred.Password != ""
+	return cred != nil &&  cred.Username != "" && cred.Password != ""
 }
 
 // validate credential values, return error if Not

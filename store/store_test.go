@@ -175,7 +175,7 @@ func Test_Remove(t *testing.T) {
 func Test_Remove_Add(t *testing.T) {
 	store := SimpleCredentialStore{}
 	e := store.Add(&Credential{"me", "1234"})
-	// paassword is not Checked
+	// password is not Checked
 	e = store.Remove(&Credential{"me", "1111"})
 	if e != nil {
 		t.Error(e); return
@@ -205,9 +205,9 @@ func Test_Update(t *testing.T) {
 		t.Error(e)
 	}
 
-	changePassword := func(in *Credential) *Credential {
+	changePassword := func(in *Credential) (*Credential, error) {
 		in.Password = "abcd"
-		return in
+		return in, nil
 	}
 
 	e = store.UpdateAll(changePassword)

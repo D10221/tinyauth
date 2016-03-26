@@ -16,7 +16,7 @@ type CredentialStore interface {
 	Remove(credential *Credential) error
 	RemoveWhere(f CredentialFilter) error
 	// Update all with Func
-	UpdateAll(transform func(in *Credential) *Credential) error
+	UpdateAll(transform CredentialMutator) error
 	UpdateWhere(f CredentialFilter,transform CredentialMutator) error
 }
 
@@ -148,16 +148,16 @@ func (store *SimpleCredentialStore) RemoveWhere(f CredentialFilter) error {
 	return nil
 }
 
-func (store *SimpleCredentialStore) UpdateAll(transform func(in *Credential) *Credential) error {
+func (store *SimpleCredentialStore) UpdateAll(transform CredentialMutator) error {
 	all := make([]*Credential, 0)
 	var e error = nil
 	for _, item := range store.all {
-		result := transform(item)
-		if result.Valid() {
-			all = append(all, result)
-		} else {
-			e = InvalidCredential
+		result, err  := transform(item)
+		if err!=nil || !result.Valid() {
+			e= err
+			break;
 		}
+		all = append(all, result)
 	}
 	if e == nil {
 		store.all = all

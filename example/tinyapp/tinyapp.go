@@ -101,7 +101,7 @@ func (app *TinyApp) Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !ok {
-		http.Error(w, err.Error(), 401 )
+		http.Error(w, tinyauth.UnAuthorized.Error(), 401 )
 		return
 	}
 
@@ -120,10 +120,11 @@ func (app *TinyApp) TemplatePath(path string) string {
 	return filepath.Join(app.CurrentDir(), app.Templates, path)
 }
 
-func (app *TinyApp) EncryptPassword (in *store.Credential) *store.Credential{
-	out, e := app.Auth.EncryptPassword(in)
-	if e!= nil {panic(e)}
-	return out
+func (app *TinyApp) EncryptPassword (in *store.Credential) (*store.Credential, error ){
+	return  app.Auth.EncryptPassword(in)
 }
 
 
+type Token struct {
+
+}

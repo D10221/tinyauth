@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TinyAuth </title>
+
+    <link rel="stylesheet" href="material/material.min.css">
+    <link rel="stylesheet" href="material/material_font_icons.css">
+    <script src="material/material.min.js" ></script>
+    <link rel="stylesheet" href="index.css" >
+    <script src="rivets/rivets.bundled.min.js" ></script>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+
+<body>
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer  mdl-layout--fixed-header">
+    <!--Navigation-->
+    <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+            <!-- Title -->
+            <span class="mdl-layout-title">TinyAuth</span>
+            <div class="mdl-layout-spacer"></div>
+            <!-- Navigation -->
+            <nav class="mdl-navigation">
+                <a class="mdl-navigation__link" href="">Link</a>
+                <a class="mdl-navigation__link" href="">Link</a>
+                <a class="mdl-navigation__link" href="">Link</a>
+                <a class="mdl-navigation__link" href="">Link</a>
+            </nav>
+            <div class="mdl-layout-spacer"></div>
+
+            <button id="show-sign-in-dialog"
+                    class="mdl-button mdl-js-button mdl-button--icon mdl-js-ripple-effect mdl-button--raised">
+                <i class="material-icons">account_circle</i>
+            </button>
+        </div>
+    </header>
+
+
+    <div class="mdl-layout__drawer">
+        <span class="mdl-layout-title"> { title }</span>
+        <nav class="mdl-navigation">
+            <a class="mdl-navigation__link" href="">Link</a>
+            <a class="mdl-navigation__link" href="">Link</a>
+            <a class="mdl-navigation__link" href="">Link</a>
+            <a class="mdl-navigation__link" href="">Link</a>
+        </nav>
+    </div>
+
+    <!--Content-->
+    <main class="mdl-layout__content content">
+
+        <dialog class="mdl-dialog" id="sign-in-dialog">
+            <h4 class="mdl-dialog__title">Sign In</h4>
+            <div class="mdl-dialog__content">
+               <form id="sign-in-form">
+                   <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                       <label class="mdl-textfield__label" for="username"> username: </label>
+                       <input class="mdl-textfield__input"  id="username" type="text">
+                   </div>
+
+                   <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                       <label class="mdl-textfield__label" for="password"> Password: </label>
+                       <input class="mdl-textfield__input"  id="password" type="password">
+                   </div>
+
+                   <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="checkbox-1" >
+                       <input type="checkbox" id="checkbox-1" class="mdl-checkbox__input" checked>
+                       <span class="mdl-checkbox__label" id="xlabel">Keep me signed in</span>
+                   </label>
+               </form>
+            </div>
+            <div class="mdl-dialog__actions">
+                <button type="button" class="mdl-button ok">Ok</button>
+                <button type="button" class="mdl-button cancel">Cancel</button>
+            </div>
+        </dialog>
+    </main>
+
+    <div>
+        <!--<button id="demo-show-snackbar" class="mdl-button mdl-js-button mdl-button&#45;&#45;raised" type="button">Show Snak </button>-->
+        <div id="demo-snackbar-example" class="mdl-js-snackbar mdl-snackbar">
+            <div class="mdl-snackbar__text"></div>
+            <button class="mdl-snackbar__action" type="button"></button>
+        </div>
+    </div>
+
+
+    <!--Footer-->
+    <footer class="mdl-mini-footer" >
+        <div class="mdl-mini-footer__left-section">
+            <div class="mdl-logo">
+               v{ version }
+            </div>
+            <ul class="mdl-mini-footer__link-list">
+                <li><a href="#">Help</a></li>
+                <li><a href="#">Privacy and Terms</a></li>
+                <li><a href="#">User Agreement</a></li>
+            </ul>
+        </div>
+        <div class="mdl-mini-footer__right-section">
+            <button class="mdl-mini-footer__social-btn"></button>
+            <button class="mdl-mini-footer__social-btn"></button>
+            <button class="mdl-mini-footer__social-btn"></button>
+        </div>
+    </footer>
+</div>
+<!-- js -->
+<script src="/index.js"></script>
+</body>
+</html>

@@ -10,7 +10,9 @@ import (
 	"github.com/D10221/tinyauth/encoder"
 	"errors"
 )
-
+var (
+	UnAuthorized = errors.New("unauthorized")
+)
 type Handler func(w http.ResponseWriter, r *http.Request);
 
 type Authenticator func(u, p string) (bool, error);
