@@ -1,9 +1,8 @@
-package store
+package tinystore
 
 import (
 	"testing"
 )
-
 
 func Test_Credentials(t *testing.T) {
 

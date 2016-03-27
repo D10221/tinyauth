@@ -6,12 +6,13 @@ import (
 	"log"
 	"github.com/D10221/tinyauth/config"
 	"github.com/D10221/tinyauth/crypto"
-	"github.com/D10221/tinyauth/store"
+	"github.com/D10221/tinyauth/tinystore"
 	"github.com/D10221/tinyauth/encoder"
 	"errors"
 )
 var (
-	UnAuthorized = errors.New("unauthorized")
+	// ErrUnAuthorized Is Not Authorized
+	ErrUnAuthorized = errors.New("unauthorized")
 )
 type Handler func(w http.ResponseWriter, r *http.Request);
 
@@ -20,7 +21,7 @@ type Authenticator func(u, p string) (bool, error);
 type TinyAuth struct {
 	Config          *config.TinyAuthConfig
 	Criptico        crypto.Criptico
-	CredentialStore store.CredentialStore
+	CredentialStore tinystore.Store
 	Encoder         encoder.Encoder
 }
 
@@ -52,10 +53,10 @@ func (t TinyAuth) RequireAuthentication(handler Handler) Handler {
 	}
 }
 
-func NewTinyAuth(config *config.TinyAuthConfig, astore store.CredentialStore) *TinyAuth {
+func NewTinyAuth(config *config.TinyAuthConfig, astore tinystore.Store) *TinyAuth {
 
 	if astore == nil {
-		astore = &store.SimpleCredentialStore{}
+		astore = &tinystore.SimpleStore{}
 	}
 
 	tAuth := &TinyAuth{
@@ -69,8 +70,8 @@ func NewTinyAuth(config *config.TinyAuthConfig, astore store.CredentialStore) *T
 
 func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
 
-	found, e := t.CredentialStore.FindByUserName(username)
-	if e != nil && e != store.NotFound || !found.Valid() {
+	found, e := t.CredentialStore.Find(tinystore.UserNameEquals(username))
+	if e != nil && e != tinystore.ErrNotFound || !found.Valid() {
 		return false, nil
 	}
 	if t.Config.Secret == "" {
@@ -84,10 +85,10 @@ func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
 	return found.Username == username && currentPassword == password, nil
 }
 
-func (t *TinyAuth)NewCredential(username, password string) (*store.Credential, error) {
+func (t *TinyAuth)NewCredential(username, password string) (*tinystore.Credential, error) {
 
 	if t.Config.Secret == "" {
-		return &store.Credential{username, password}, nil
+		return &tinystore.Credential{username, password}, nil
 	}
 
 	password, err := t.Criptico.Encrypt(password)
@@ -95,10 +96,10 @@ func (t *TinyAuth)NewCredential(username, password string) (*store.Credential, e
 		return nil, err
 	}
 
-	return &store.Credential{username, password}, nil
+	return &tinystore.Credential{username, password}, nil
 }
 
-func (t *TinyAuth) GetRequestCredentials(r *http.Request) (*store.Credential, error) {
+func (t *TinyAuth) GetRequestCredentials(r *http.Request) (*tinystore.Credential, error) {
 
 	if t.Config.AuthorizationKey == "" {
 		log.Println("Warning no AuthorizationKey")
@@ -108,17 +109,17 @@ func (t *TinyAuth) GetRequestCredentials(r *http.Request) (*store.Credential, er
 
 	decoded, e := t.Encoder.Decode(auth)
 	if e != nil {
-		return &store.Credential{}, e
+		return &tinystore.Credential{}, e
 	}
 	parts := strings.Split(decoded, ":")
 	if len(parts) < 2 {
-		return &store.Credential{}, e
+		return &tinystore.Credential{}, e
 	}
-	return &store.Credential{parts[0], parts[1]}, nil
+	return &tinystore.Credential{parts[0], parts[1]}, nil
 }
 var FormHasNoCredentials = errors.New("Form has no  credentials")
 
-func (t *TinyAuth) GetFormCredentials(r *http.Request) (*store.Credential, error) {
+func (t *TinyAuth) GetFormCredentials(r *http.Request) (*tinystore.Credential, error) {
 
 	e:= r.ParseForm()
 
@@ -139,15 +140,15 @@ func (t *TinyAuth) GetFormCredentials(r *http.Request) (*store.Credential, error
 
 	}
 
-	credential := &store.Credential{username, password}
+	credential := &tinystore.Credential{username, password}
 
 	return credential, credential.Validate()
 }
 
-func (t TinyAuth) Authenticate(credential *store.Credential) (bool, error) {
+func (t TinyAuth) Authenticate(credential *tinystore.Credential) (bool, error) {
 
 	if ! credential.Valid() {
-		return false, store.InvalidCredential
+		return false, tinystore.ErrInvalidCredential
 	}
 
 	ok, err := t.AuthFunc(credential.Username, credential.Password)
@@ -173,7 +174,7 @@ func (t *TinyAuth) LoadConfig(path string) error {
 	return nil
 }
 
-func (t *TinyAuth) EncryptPassword(in *store.Credential) (*store.Credential, error) {
+func (t *TinyAuth) EncryptPassword(in *tinystore.Credential) (*tinystore.Credential, error) {
 	password, e := t.Criptico.Encrypt(in.Password)
 	if e != nil {
 		return nil, e
@@ -182,6 +183,6 @@ func (t *TinyAuth) EncryptPassword(in *store.Credential) (*store.Credential, err
 	return in , nil
 }
 
-func (t *TinyAuth) Encode(credential *store.Credential) (key string, value string) {
+func (t *TinyAuth) Encode(credential *tinystore.Credential) (key string, value string) {
 	return t.Config.AuthorizationKey, t.Encoder.Encode(credential.Username, credential.Password)
 }

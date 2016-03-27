@@ -1,4 +1,4 @@
-package store
+package tinystore
 
 type Credential struct {
 	Username string
@@ -16,16 +16,29 @@ func (cred *Credential) Validate() error {
 	if cred!=nil &&  cred.Valid() {
 		return nil
 	}
-	return InvalidCredential
+	return ErrInvalidCredential
+}
+
+func (cred *Credential) Equals(other *Credential) bool {
+	if cred == nil || other == nil {
+		return other == cred
+	}
+	return cred.Username == other.Username
 }
 
 type CredentialComparison func (a *Credential,other *Credential) bool ;
 
-type CredentialFilter func (a *Credential) bool ;
+type Filter func (a *Credential) bool ;
 
-type CredentialMutator  func(in *Credential) (*Credential, error );
+func NotFilter(filter Filter) Filter {
+	return func(c *Credential) bool {
+		return !filter(c)
+	}
+}
 
-var Always CredentialFilter = func( a *Credential) bool {return  true }
+type Mutator  func(in *Credential) (*Credential, error );
+
+var Always Filter = func( a *Credential) bool {return  true }
 
 func AreNamesEqual(a *Credential,b *Credential) bool {
 	if a ==nil || b == nil { return false }
@@ -39,7 +52,7 @@ func AreEqual (a *Credential,b *Credential) bool {
 	return a.Username == b.Username && a.Password ==b.Password
 }
 
-func ByName(name string) CredentialFilter {
+func UserNameEquals(name string) Filter {
 	validator:= func (c *Credential) bool {
 		return c!=nil && c.Username == name
 	}

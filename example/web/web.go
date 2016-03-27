@@ -5,7 +5,7 @@ import (
 	"log"
 	"github.com/D10221/tinyauth"
 	"github.com/D10221/tinyauth/config"
-	"github.com/D10221/tinyauth/store"
+	"github.com/D10221/tinyauth/tinystore"
 	"github.com/D10221/tinyauth/example/tinyapp"
 	// "github.com/gorilla/mux"
 )
@@ -18,7 +18,7 @@ func main() {
 
 	config := config.NewConfig("")
 
-	store:= &store.SimpleCredentialStore{}
+	store:= &tinystore.SimpleStore{}
 	app.Auth = tinyauth.NewTinyAuth(config, store)
 
 	e := app.Auth.LoadConfig(app.MakePath("example/tinyapp/config.json"))
@@ -35,7 +35,7 @@ func main() {
 	if e != nil { panic(e)	}
 
 
-	app.Auth.CredentialStore.UpdateAll(app.EncryptPassword)
+	app.Auth.CredentialStore.ForEach(app.EncryptPassword)
 
 	for _, c := range app.Auth.CredentialStore.All()[:]{
 		log.Printf("Credentials: %v" , c)

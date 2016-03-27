@@ -10,7 +10,7 @@ import (
 	"strings"
 	"github.com/D10221/tinyauth"
 	"github.com/D10221/tinyauth/config"
-	"github.com/D10221/tinyauth/store"
+	"github.com/D10221/tinyauth/tinystore"
 )
 func Test_Config(t *testing.T){
 	// TODO:
@@ -72,10 +72,14 @@ func Test_RequireAuthentication_Encrypted(t *testing.T){
 		t.Error(e)
 	}
 
-	tAuth.CredentialStore.Load( &store.Credential{"admin", pwd})
+	tAuth.CredentialStore.Clear()
+	e= tAuth.CredentialStore.Add(&tinystore.Credential{"admin", pwd})
+	if e!=nil {
+		t.Error(e)
+	}
 
-	found, e := tAuth.CredentialStore.FindByUserName("admin")
-	if e!=nil && e!= store.NotFound || !found.Valid() {
+	found, e := tAuth.CredentialStore.Find(tinystore.UserNameEquals("admin"))
+	if e!=nil && e!= tinystore.ErrNotFound || !found.Valid() {
 		t.Error("Credential not Found")
 	}
 
@@ -90,7 +94,7 @@ func Test_RequireAuthentication_Encrypted(t *testing.T){
 		t.Error(err)
 	}
 	if string(body)!= "ok" {
-		t.Error("bad body %s", string(body))
+		t.Errorf("bad body %s", string(body))
 	}
 }
 
@@ -116,7 +120,9 @@ func Test_RequireAuthentication(t *testing.T){
 
 	request.Header.Add(config.AuthorizationKey, tauth.Encoder.Encode("admin", "password"))
 
-	tauth.CredentialStore.Load(&store.Credential{"admin", "password"})
+	tauth.CredentialStore.Clear()
+	err := tauth.CredentialStore.Add(&tinystore.Credential{"admin", "password"})
+	if err !=nil { 	t.Error(err); return }
 
 	handler(response, request)
 
@@ -129,7 +135,7 @@ func Test_RequireAuthentication(t *testing.T){
 		t.Error(err)
 	}
 	if string(body)!= "ok" {
-		t.Error("bad body %s", string(body))
+		t.Errorf("bad body %s", string(body))
 	}
 }
 
@@ -141,8 +147,11 @@ func Test_GetFormCredentials(t *testing.T){
 		AuthorizationKey: "Authorization",
 		BasicScheme: "Basic ",
 	}
+
 	auth :=  tinyauth.NewTinyAuth(config, nil )
-	auth.CredentialStore.Load(&store.Credential{"admin", "password"})
+	auth.CredentialStore.Clear()
+	err:= auth.CredentialStore.Add(&tinystore.Credential{"admin", "password"})
+	if err !=nil { 	t.Error(err); return }
 
 	// prep Request
 	request, _ := http.NewRequest("GET", "/", nil)
@@ -184,7 +193,7 @@ func Test_GetFormCredentials(t *testing.T){
 		t.Error(err)
 	}
 	if string(body)!= "ok" {
-		t.Error("bad body %s", string(body))
+		t.Errorf("bad body %s", string(body))
 	}
 }
 
@@ -202,8 +211,9 @@ func Test_GetFormCredentials_Encrypted(t *testing.T){
 		t.Error(e)
 		return
 	}
-	auth.CredentialStore.Load(&store.Credential{"admin", password})
-
+	auth.CredentialStore.Clear()
+	e = auth.CredentialStore.Add(&tinystore.Credential{"admin", password})
+	if e!=nil { t.Error(e); return }
 
 	handler:= func(w http.ResponseWriter, r *http.Request) {
 		cred, e := auth.GetFormCredentials(r)
@@ -309,7 +319,7 @@ func ResponseTester (t *testing.T) ResponseTest {
 
 func Test_Auth_Encode(t *testing.T){
 	auth:= tinyauth.NewTinyAuth(config.NewConfig("0123456789ABCDEF"), nil )
-	key,value:= auth.Encode(&store.Credential{"admin", "password"})
+	key,value:= auth.Encode(&tinystore.Credential{"admin", "password"})
 	if key != auth.Config.AuthorizationKey {
 		t.Error("Bad Key")
 	}
