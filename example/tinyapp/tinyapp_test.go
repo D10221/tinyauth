@@ -9,7 +9,8 @@ import (
 	"github.com/D10221/tinyauth"
 	"github.com/D10221/tinyauth/config"
 	"net/http"
-	"github.com/D10221/tinyauth/tinystore"
+	"github.com/D10221/tinystore"
+	"github.com/D10221/tinyauth/credentials"
 )
 
 func Test_TinyApp(t *testing.T){
@@ -132,12 +133,24 @@ func copyValues(dst, src url.Values) {
 	}
 }
 
+func nameFilter(name string) tinystore.Filter {
+	return func(item tinystore.StoreItem) bool {
+
+		value, ok := item.(*credentials.Credential)
+		if !ok {
+			return false
+			//panic("Not a credential")
+		}
+		return value.Username == name
+	}
+}
+
 func Test_Authenticate(t *testing.T){
 
 	app:= &TinyApp{Auth: tinyauth.NewTinyAuth(config.NewConfig("0123456789ABCDEF"), nil)}
-	app.Auth.CredentialStore.Add(&tinystore.Credential{"admin", "password"})
-	app.Auth.CredentialStore.ForEachWhere(tinystore.UserNameEquals("admin"), app.Auth.EncryptPassword )
-	ok, err:= app.Auth.Authenticate(&tinystore.Credential{"admin", "password"})
+	app.Auth.CredentialStore.Add(&credentials.Credential{"admin", "password"})
+	app.Auth.CredentialStore.ForEachWhere(nameFilter("admin"), app.Auth.EncryptPassword )
+	ok, err:= app.Auth.Authenticate(&credentials.Credential{"admin", "password"})
 
 	if err!=nil { t.Error(err)  ; return }
 
@@ -148,7 +161,7 @@ func Test_Authenticate(t *testing.T){
 		// Setup ...
 		writer := httptest.NewRecorder()
 		r, _:= http.NewRequest(http.MethodGet, "/", nil )
-		key, value:= app.Auth.Encode(&tinystore.Credential{"admin", "password"})
+		key, value:= app.Auth.Encode(&credentials.Credential{"admin", "password"})
 		r.Header.Add(key, value)
 		// Test subject ...
 		app.Authenticate(writer, r)

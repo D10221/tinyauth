@@ -1,10 +1,13 @@
-package tinystore
+package credentials
+
+import "errors"
 
 type Credential struct {
 	Username string
 	Password string
 }
 
+var ErrInvalidCredential = errors.New("Invalid Credentials")
 
 // Must contain valid values
 func (cred *Credential) Valid() bool {
@@ -17,6 +20,9 @@ func (cred *Credential) Validate() error {
 		return nil
 	}
 	return ErrInvalidCredential
+}
+func (c *Credential) GetKey() interface{} {
+	return c.Username
 }
 
 func (cred *Credential) Equals(other *Credential) bool {

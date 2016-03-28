@@ -8,7 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"fmt"
-	"github.com/D10221/tinyauth/tinystore"
+	"github.com/D10221/tinyauth/credentials"
+	"github.com/D10221/tinystore"
 )
 
 type TinyApp struct {
@@ -32,7 +33,7 @@ func (app *TinyApp) Login(w http.ResponseWriter, r *http.Request) {
 	data := &struct {
 		Title string
 		FormAction string
-		Credential *tinystore.Credential
+		Credential *credentials.Credential
 	}{
 		Title: "Login Form",
 		FormAction: "/authenticate",
@@ -73,7 +74,7 @@ func (app *TinyApp) CurrentDir() string {
 
 func (app *TinyApp) Authenticate(w http.ResponseWriter, r *http.Request) {
 
-	credential:= &tinystore.Credential{}
+	credential:= &credentials.Credential{}
 
 	if r.Method == "POST" {
 		c,e := app.Auth.GetFormCredentials(r)
@@ -121,6 +122,6 @@ func (app *TinyApp) TemplatePath(path string) string {
 	return filepath.Join(app.CurrentDir(), app.Templates, path)
 }
 
-func (app *TinyApp) EncryptPassword (in *tinystore.Credential) (*tinystore.Credential, error ){
+func (app *TinyApp) EncryptPassword (in tinystore.StoreItem) (tinystore.StoreItem, error ){
 	return  app.Auth.EncryptPassword(in)
 }

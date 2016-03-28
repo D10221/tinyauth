@@ -5,7 +5,7 @@ import (
 	"log"
 	"github.com/D10221/tinyauth"
 	"github.com/D10221/tinyauth/config"
-	"github.com/D10221/tinyauth/tinystore"
+	"github.com/D10221/tinystore"
 	"github.com/D10221/tinyauth/example/tinyapp"
 	// "github.com/gorilla/mux"
 )
