@@ -79,22 +79,30 @@ func NewTinyAuth(config *config.TinyAuthConfig, credentialStore tinystore.Store)
 
 // AuthFunc
 func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
+
 	found, e:= credentials.FindByKey(t.CredentialStore, username)
+
 	if e!= nil {
 		return false, e
 	}
+
 	if t.Config.Secret == "" {
+		log.Println("Debug: No Secret, No Encryption")
 		return found.Username == username && found.Password == password, nil
 	}
 
+
 	currentPassword, err := t.Criptico.Decrypt(found.Password)
+
 	if err != nil {
+		log.Printf("Error; AuthFunc; &s \n", err.Error())
 		return false, err
 	}
+
 	return found.Username == username && currentPassword == password, nil
 }
 
-// NewCredential
+// NewCredential encrypts password if Config has secret
 func (t *TinyAuth)NewCredential(username, password string) (*credentials.Credential, error) {
 
 	if t.Config.Secret == "" {
@@ -166,13 +174,7 @@ func (t TinyAuth) Authenticate(credential *credentials.Credential) (bool, error)
 		return false, tinystore.ErrInvalidStoreItem
 	}
 
-	ok, err := t.AuthFunc(credential.Username, credential.Password)
-
-	if err == nil {
-		return ok, nil
-	}
-
-	return false, err
+	return t.AuthFunc(credential.Username, credential.Password)
 }
 
 // LoadConfig
@@ -205,3 +207,5 @@ func (t *TinyAuth) EncryptPassword(in *credentials.Credential) (*credentials.Cre
 func (t *TinyAuth) Encode(credential *credentials.Credential) (key string, value string) {
 	return t.Config.AuthorizationKey, t.Encoder.Encode(credential.Username, credential.Password)
 }
+
+

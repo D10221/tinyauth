@@ -8,19 +8,18 @@ import (
 	"github.com/D10221/tinyauth"
 	"github.com/D10221/tinyauth/config"
 	"net/http"
-	"github.com/D10221/tinyauth/credentials"
 )
 
-func Test_TinyApp(t *testing.T){
+func Test_TinyApp(t *testing.T) {
 
-	app:=  &TinyApp{Auth: tinyauth.NewTinyAuth( config.NewConfig("0123456789ABCDEF"), nil)}
+	app := &TinyApp{Auth: tinyauth.NewTinyAuth(config.NewConfig("0123456789ABCDEF"), nil)}
 
 	if app.Auth.Config.Secret == "" {
 		t.Error("No Secret")
 	}
 
 	credential, e := app.Auth.NewCredential("user", "password")
-	if e!=nil {
+	if e != nil {
 		t.Error(e)
 		return;
 	}
@@ -36,19 +35,19 @@ func Test_TinyApp(t *testing.T){
 	}
 }
 
-func Test_TinyApp_Config(t *testing.T){
+func Test_TinyApp_Config(t *testing.T) {
 
-	app:=  &TinyApp{Auth: tinyauth.NewTinyAuth( &config.TinyAuthConfig{}, nil)}
+	app := &TinyApp{Auth: tinyauth.NewTinyAuth(&config.TinyAuthConfig{}, nil)}
 
 	log.Printf("App Dir: %s", app.CurrentDir())
 
-	path:= app.MakePath("config.json")
+	path := app.MakePath("config.json")
 
 	log.Printf("App config: %s", path)
 
-	e:= app.Auth.LoadConfig(path)
+	e := app.Auth.LoadConfig(path)
 
-	if e!=nil {
+	if e != nil {
 		t.Error(e)
 		return
 	}
@@ -60,7 +59,7 @@ func Test_TinyApp_Config(t *testing.T){
 
 	credential, e := app.Auth.NewCredential("user", "password")
 
-	if e!=nil {
+	if e != nil {
 		t.Error(e)
 		return
 	}
@@ -76,19 +75,18 @@ func Test_TinyApp_Config(t *testing.T){
 		t.Error("credential is not encrypted")
 	}
 
-
 }
 
-func Test_TinyApp_NoEncryption(t *testing.T){
+func Test_TinyApp_NoEncryption(t *testing.T) {
 
-	app:=  &TinyApp{Auth: tinyauth.NewTinyAuth( &config.TinyAuthConfig{}, nil)}
+	app := &TinyApp{Auth: tinyauth.NewTinyAuth(&config.TinyAuthConfig{}, nil)}
 
 	if app.Auth.Config.Secret != "" {
 		t.Error("Should not have Secret")
 	}
 
 	credential, e := app.Auth.NewCredential("user", "password")
-	if e!= nil {
+	if e != nil {
 		t.Error(e)
 		t.Fail()
 		return
@@ -107,8 +105,7 @@ func Test_TinyApp_NoEncryption(t *testing.T){
 	log.Println(credential)
 }
 
-
-func makeRequest(method string, username string,password string) *http.Request {
+func makeRequest(method string, username string, password string) *http.Request {
 	request, _ := http.NewRequest(method, "/", nil)
 	if method == http.MethodPost {
 		request.Form = url.Values{}
@@ -131,59 +128,88 @@ func copyValues(dst, src url.Values) {
 	}
 }
 
+func Test_Authenticate(t *testing.T) {
 
-func Test_Authenticate(t *testing.T){
+	app := &TinyApp{Auth: tinyauth.NewTinyAuth(config.NewConfig("0123456789ABCDEF"), nil)}
+	password := "password"
 
-	app:= &TinyApp{Auth: tinyauth.NewTinyAuth(config.NewConfig("0123456789ABCDEF"), nil)}
-	app.Auth.CredentialStore.Add(&credentials.Credential{"admin", "password"})
+	// NewCredential encrypts password in config has secret
+	c, e := app.Auth.NewCredential("admin", password)
+	if e != nil {
+		t.Error(e)
+		return
+	}
 
-	// Change all Passwords
-	credentials.ForEach(app.Auth.CredentialStore, app.Auth.EncryptPassword , nil)
+	// Add encrypted Credential
+	app.Auth.CredentialStore.Add(c)
 
-	ok, err:= app.Auth.Authenticate(&credentials.Credential{"admin", "password"})
+	// test manually
+	decrypted, e := app.Auth.Criptico.Decrypt(c.Password)
+	if e!=nil {
+		t.Log(e)
+		return
+	}
+	if password != decrypted {
+		t.Errorf("Error Expected: %s, got: %s", password, decrypted)
+		return
+	}
 
-	if err!=nil { t.Error(err)  ; return }
+	// Authenticate will decrypt password and compare against plain text
+	// copy to don't bring the pointer but a new "instance"
+	c = c.Copy()
+	//set to plain text, as it will come from headers
+	c.Password = password
+	// Only diff is headers are encoded
+	ok, err := app.Auth.Authenticate(c)
 
-	if !ok { t.Error("Authentication system failure") ; return }
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if !ok {
+		t.Error("Authentication system failure")
+		return
+	}
 
 	// Get
 	{
 		// Setup ...
 		writer := httptest.NewRecorder()
-		r, _:= http.NewRequest(http.MethodGet, "/", nil )
-		key, value:= app.Auth.Encode(&credentials.Credential{"admin", "password"})
+		r, _ := http.NewRequest(http.MethodGet, "/", nil)
+		key, value := app.Auth.Encode(c)
 		r.Header.Add(key, value)
 		// Test subject ...
 		app.Authenticate(writer, r)
 		// Test ...
-		if writer.Code  !=  http.StatusOK {
+		if writer.Code != http.StatusOK {
 			t.Log(string(writer.Body.Bytes()))
-			t.Errorf("method: %s Expected %d , got: %d", r.Method , http.StatusOK, writer.Code)
+			t.Errorf("method: %s Expected %d , got: %d", r.Method, http.StatusOK, writer.Code)
 		}
 	}
 	// Post
 	{
 		// Setup ...
 		writer := httptest.NewRecorder()
-		r:= makeRequest(http.MethodPost,"admin", "password")
+		r := makeRequest(http.MethodPost, "admin", "password")
 		// Test subject ...
 		app.Authenticate(writer, r)
 		// Test ...
-		if writer.Code  != http.StatusOK {
+		if writer.Code != http.StatusOK {
 			t.Log(string(writer.Body.Bytes()))
-			t.Errorf("method: %s Expected %d , got: %d", r.Method , http.StatusOK, writer.Code)
+			t.Errorf("method: %s Expected %d , got: %d", r.Method, http.StatusOK, writer.Code)
 		}
 	}
 	// Not Get Nor Post
 	{
 		//Setup ...
 		writer := httptest.NewRecorder()
-		r:= makeRequest(http.MethodPut,"admin", "password")
+		r := makeRequest(http.MethodPut, "admin", "password")
 		// Test subject ...
 		app.Authenticate(writer, r)
 		// Test ...
-		if writer.Code  != http.StatusMethodNotAllowed {
-			t.Errorf("method: %s Expected %d , got: %d", r.Method , http.StatusMethodNotAllowed, writer.Code)
+		if writer.Code != http.StatusMethodNotAllowed {
+			t.Errorf("method: %s Expected %d , got: %d", r.Method, http.StatusMethodNotAllowed, writer.Code)
 		}
 	}
 }

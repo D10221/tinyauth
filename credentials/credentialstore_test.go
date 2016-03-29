@@ -68,5 +68,28 @@ func Test_LoadJson(t *testing.T) {
 			t.Errorf("What we found?: &v", value)
 		}
 	}
-
+}
+func setPassword(paswd string) credentials.Mutator {
+	return func(in *credentials.Credential) *credentials.Credential{
+		in.Password = paswd
+		return in
+	}
+}
+func passwordEquals(pwd string) credentials.Filter{
+	return func (c *credentials.Credential) bool{
+		c!=nil && c.Password == pwd
+	}
+}
+func Test_ForEach(t *testing.T){
+	store:= credentials.NewCredentialStore()
+	e:= store.Add(&credentials.Credential{"admin", "password"})
+	if e !=nil {
+		t.Error(e)
+		return
+	}
+	// Change all Passwords
+	credentials.ForEach(store, setPassword("abcd") , nil)
+	if ok, e:= credentials.All(store, passwordEquals("abcd") ) ; !ok || e!=nil {
+		t.Error(e)
+	}
 }

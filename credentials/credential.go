@@ -9,6 +9,10 @@ type Credential struct {
 	Password string
 }
 
+func (this *Credential) Copy() *Credential {
+	return &Credential{this.Username, this.Password}
+}
+
 var ErrInvalidCredential = errors.New("Invalid Credentials")
 
 // Must contain valid values
