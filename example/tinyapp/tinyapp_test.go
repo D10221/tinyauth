@@ -5,11 +5,9 @@ import (
 	"log"
 	"net/url"
 	"net/http/httptest"
-
 	"github.com/D10221/tinyauth"
 	"github.com/D10221/tinyauth/config"
 	"net/http"
-	"github.com/D10221/tinystore"
 	"github.com/D10221/tinyauth/credentials"
 )
 
@@ -133,23 +131,15 @@ func copyValues(dst, src url.Values) {
 	}
 }
 
-func nameFilter(name string) tinystore.Filter {
-	return func(item tinystore.StoreItem) bool {
-
-		value, ok := item.(*credentials.Credential)
-		if !ok {
-			return false
-			//panic("Not a credential")
-		}
-		return value.Username == name
-	}
-}
 
 func Test_Authenticate(t *testing.T){
 
 	app:= &TinyApp{Auth: tinyauth.NewTinyAuth(config.NewConfig("0123456789ABCDEF"), nil)}
 	app.Auth.CredentialStore.Add(&credentials.Credential{"admin", "password"})
-	app.Auth.CredentialStore.ForEachWhere(nameFilter("admin"), app.Auth.EncryptPassword )
+
+	// Change all Passwords
+	credentials.ForEach(app.Auth.CredentialStore, app.Auth.EncryptPassword , nil)
+
 	ok, err:= app.Auth.Authenticate(&credentials.Credential{"admin", "password"})
 
 	if err!=nil { t.Error(err)  ; return }

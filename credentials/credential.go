@@ -1,6 +1,8 @@
 package credentials
 
-import "errors"
+import (
+	"errors"
+)
 
 type Credential struct {
 	Username string
@@ -58,7 +60,7 @@ func AreEqual (a *Credential,b *Credential) bool {
 	return a.Username == b.Username && a.Password ==b.Password
 }
 
-func UserNameEquals(name string) Filter {
+func UserNameEqualsFilter(name string) Filter {
 	validator:= func (c *Credential) bool {
 		return c!=nil && c.Username == name
 	}

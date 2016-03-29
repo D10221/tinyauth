@@ -4,12 +4,10 @@ import (
 	"github.com/D10221/tinyauth"
 	"net/http"
 	"html/template"
-	"log"
 	"os"
 	"path/filepath"
 	"fmt"
 	"github.com/D10221/tinyauth/credentials"
-	"github.com/D10221/tinystore"
 )
 
 type TinyApp struct {
@@ -39,9 +37,6 @@ func (app *TinyApp) Login(w http.ResponseWriter, r *http.Request) {
 		FormAction: "/authenticate",
 		Credential: credential,
 	}
-
-	log.Printf("Header credentials %v ", data.Credential)
-	log.Printf("Action: %v ", data.FormAction)
 
 	e = t.Execute(w, data)
 
@@ -122,6 +117,6 @@ func (app *TinyApp) TemplatePath(path string) string {
 	return filepath.Join(app.CurrentDir(), app.Templates, path)
 }
 
-func (app *TinyApp) EncryptPassword (in tinystore.StoreItem) (tinystore.StoreItem, error ){
+func (app *TinyApp) EncryptPassword (in *credentials.Credential) (*credentials.Credential, error ){
 	return  app.Auth.EncryptPassword(in)
 }

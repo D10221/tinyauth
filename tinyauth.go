@@ -64,7 +64,8 @@ func (t TinyAuth) RequireAuthentication(handler Handler) Handler {
 func NewTinyAuth(config *config.TinyAuthConfig, credentialStore tinystore.Store) *TinyAuth {
 
 	if credentialStore == nil {
-		credentialStore = NewCredentialStore()
+		credentialStore = credentials.NewCredentialStore()
+		tinystore.RegisterStoreAdapter(credentialStore, credentials.NewCredentialStoreAdapter())
 	}
 
 	tAuth := &TinyAuth{
@@ -78,13 +79,9 @@ func NewTinyAuth(config *config.TinyAuthConfig, credentialStore tinystore.Store)
 
 // AuthFunc
 func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
-
-	item, e := t.CredentialStore.Find(CredentialNameFilter(username))
-	found, ok := item.(*credentials.Credential)
-
-	if !ok || ( e != nil &&   e != tinystore.ErrNotFound || !found.Valid() ) {
-		log.Printf("Error: %s" , "Something wrong with the store ? ")
-		return false, nil
+	found, e:= credentials.FindByKey(t.CredentialStore, username)
+	if e!= nil {
+		return false, e
 	}
 	if t.Config.Secret == "" {
 		return found.Username == username && found.Password == password, nil
@@ -95,19 +92,6 @@ func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
 		return false, err
 	}
 	return found.Username == username && currentPassword == password, nil
-}
-
-// CredentialNameFilter
-func CredentialNameFilter(name string) tinystore.Filter {
-	return func(item tinystore.StoreItem) bool {
-
-		value, ok := item.(*credentials.Credential)
-		if !ok {
-			return false
-			//panic("Not a credential")
-		}
-		return value.Username == name
-	}
 }
 
 // NewCredential
@@ -207,11 +191,8 @@ func (t *TinyAuth) LoadConfig(path string) error {
 }
 
 // EncryptPassword
-func (t *TinyAuth) EncryptPassword(item tinystore.StoreItem) (tinystore.StoreItem, error) {
-	in, ok := item.(*credentials.Credential)
-	if!ok {
-		return nil, tinystore.ErrInvalidStoreItem
-	}
+func (t *TinyAuth) EncryptPassword(in *credentials.Credential) (*credentials.Credential, error) {
+
 	password, e := t.Criptico.Encrypt(in.Password)
 	if e != nil {
 		return nil, e

@@ -1,12 +1,13 @@
-package credentials
+package credentials_test
 
 import (
 	"testing"
+	"github.com/D10221/tinyauth/credentials"
 )
 
 func Test_Credentials(t *testing.T) {
 
-	cred := &Credential{"bob", "P@55w0rd!"}
+	cred := &credentials.Credential{"bob", "P@55w0rd!"}
 	if cred == nil {
 		t.Error("WTF")
 	}
@@ -14,57 +15,57 @@ func Test_Credentials(t *testing.T) {
 
 func Test_Is_Valid_Credential(t *testing.T){
 
-	if ((&Credential{}).Valid()) {
+	if ((&credentials.Credential{}).Valid()) {
 		t.Error("Shoudn't")
 	}
 
-	if (!(&Credential{"me", "1234"}).Valid()) {
+	if (!(&credentials.Credential{"me", "1234"}).Valid()) {
 		t.Error("it Should")
 	}
 }
 
 func Test_AreEqual(t *testing.T) {
 
-	if AreEqual(&Credential{"A", "x"},&Credential{"A", "x1"}) {
+	if credentials.AreEqual(&credentials.Credential{"A", "x"},&credentials.Credential{"A", "x1"}) {
 		t.Error("They Are Not Equal")
 	}
-	if AreEqual(&Credential{"B", "x"},&Credential{"A", "x"}) {
+	if credentials.AreEqual(&credentials.Credential{"B", "x"},&credentials.Credential{"A", "x"}) {
 		t.Error("They Are Not Equal")
 	}
-	if AreEqual(&Credential{"A", "x"},&Credential{}) {
+	if credentials.AreEqual(&credentials.Credential{"A", "x"},&credentials.Credential{}) {
 		t.Error("They Are Not Equal")
 	}
-	if !AreEqual(&Credential{"A", "x"},&Credential{"A", "x"}) {
+	if !credentials.AreEqual(&credentials.Credential{"A", "x"},&credentials.Credential{"A", "x"}) {
 		t.Error("They Are Equal")
 	}
-	if !AreEqual(&Credential{},&Credential{}) {
+	if !credentials.AreEqual(&credentials.Credential{},&credentials.Credential{}) {
 		t.Error("They Are Equal")
 	}
-	if AreEqual(nil,&Credential{}) {
+	if credentials.AreEqual(nil,&credentials.Credential{}) {
 		t.Error("They Are Not Equal")
 	}
-	if AreEqual(&Credential{},nil) {
+	if credentials.AreEqual(&credentials.Credential{},nil) {
 		t.Error("They Are Not Equal")
 	}
-	if !AreEqual(nil,nil) {
+	if !credentials.AreEqual(nil,nil) {
 		t.Error("They Are Equal")
 	}
 }
 
 func Test_ByName(t *testing.T){
-	ok:= AreNamesEqual(&Credential{}, &Credential{})
+	ok:= credentials.AreNamesEqual(&credentials.Credential{}, &credentials.Credential{})
 	if !ok {
 		t.Error("It Should")
 	}
-	ok= AreNamesEqual(&Credential{}, &Credential{"A", "X"})
+	ok= credentials.AreNamesEqual(&credentials.Credential{}, &credentials.Credential{"A", "X"})
 	if ok {
 		t.Error("It Shouldn't")
 	}
-	ok= AreNamesEqual(nil, &Credential{"A", "X"})
+	ok= credentials.AreNamesEqual(nil, &credentials.Credential{"A", "X"})
 	if ok {
 		t.Error("It Shouldn't")
 	}
-	ok= AreNamesEqual(&Credential{"A", "X"}, nil)
+	ok= credentials.AreNamesEqual(&credentials.Credential{"A", "X"}, nil)
 	if ok {
 		t.Error("It Shouldn't")
 	}

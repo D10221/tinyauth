@@ -31,7 +31,7 @@ func main() {
 		panic(e)
 	}
 
-	e = tinystore.LoadJson(app.Auth.CredentialStore, app.MakePath("example/tinyapp/credentials.json"))
+	e = tinystore.LoadJsonFile(app.Auth.CredentialStore, app.MakePath("example/tinyapp/credentials.json"))
 
 	if e != nil { panic(e)	}
 
