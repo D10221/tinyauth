@@ -15,10 +15,15 @@ var (
 	// ErrUnAuthorized Is Not Authorized
 	ErrUnAuthorized = errors.New("unauthorized")
 )
+
+// Handler
 type Handler func(w http.ResponseWriter, r *http.Request);
 
+
+// Authenticator
 type Authenticator func(u, p string) (bool, error);
 
+// TinyAuth glue...
 type TinyAuth struct {
 	Config          *config.TinyAuthConfig
 	Criptico        crypto.Criptico
@@ -26,6 +31,7 @@ type TinyAuth struct {
 	Encoder         encoder.Encoder
 }
 
+// RequireAuthentication main purpose of this whole exercise ,will end up as middleware/plugin
 func (t TinyAuth) RequireAuthentication(handler Handler) Handler {
 	// ...
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -54,10 +60,11 @@ func (t TinyAuth) RequireAuthentication(handler Handler) Handler {
 	}
 }
 
+// NewTinyAuth default TinyAuth fty, optional store, can be nil , will use default implementation
 func NewTinyAuth(config *config.TinyAuthConfig, credentialStore tinystore.Store) *TinyAuth {
 
 	if credentialStore == nil {
-		credentialStore = &tinystore.SimpleStore{}
+		credentialStore = NewCredentialStore()
 	}
 
 	tAuth := &TinyAuth{
@@ -69,6 +76,7 @@ func NewTinyAuth(config *config.TinyAuthConfig, credentialStore tinystore.Store)
 	return tAuth
 }
 
+// AuthFunc
 func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
 
 	item, e := t.CredentialStore.Find(CredentialNameFilter(username))
@@ -89,6 +97,7 @@ func (t *TinyAuth) AuthFunc(username, password string) (bool, error) {
 	return found.Username == username && currentPassword == password, nil
 }
 
+// CredentialNameFilter
 func CredentialNameFilter(name string) tinystore.Filter {
 	return func(item tinystore.StoreItem) bool {
 
@@ -101,6 +110,7 @@ func CredentialNameFilter(name string) tinystore.Filter {
 	}
 }
 
+// NewCredential
 func (t *TinyAuth)NewCredential(username, password string) (*credentials.Credential, error) {
 
 	if t.Config.Secret == "" {
@@ -115,6 +125,7 @@ func (t *TinyAuth)NewCredential(username, password string) (*credentials.Credent
 	return &credentials.Credential{username, password}, nil
 }
 
+// GetRequestCredentials
 func (t *TinyAuth) GetRequestCredentials(r *http.Request) (*credentials.Credential, error) {
 
 	if t.Config.AuthorizationKey == "" {
@@ -133,8 +144,11 @@ func (t *TinyAuth) GetRequestCredentials(r *http.Request) (*credentials.Credenti
 	}
 	return &credentials.Credential{parts[0], parts[1]}, nil
 }
-var FormHasNoCredentials = errors.New("Form has no  credentials")
 
+// FormHasNoCredentials
+var ErrFormHasNoCredentials = errors.New("Form has no  credentials")
+
+// GetFormCredentials
 func (t *TinyAuth) GetFormCredentials(r *http.Request) (*credentials.Credential, error) {
 
 	e:= r.ParseForm()
@@ -151,7 +165,7 @@ func (t *TinyAuth) GetFormCredentials(r *http.Request) (*credentials.Credential,
 		password = r.PostForm.Get("password")
 		// Still Empty ?
 		if username == "" || password =="" {
-			return nil,  FormHasNoCredentials
+			return nil, ErrFormHasNoCredentials
 		}
 
 	}
@@ -161,6 +175,7 @@ func (t *TinyAuth) GetFormCredentials(r *http.Request) (*credentials.Credential,
 	return credential, credential.Validate()
 }
 
+// Authenticate
 func (t TinyAuth) Authenticate(credential *credentials.Credential) (bool, error) {
 
 	if ! credential.Valid() {
@@ -176,6 +191,7 @@ func (t TinyAuth) Authenticate(credential *credentials.Credential) (bool, error)
 	return false, err
 }
 
+// LoadConfig
 func (t *TinyAuth) LoadConfig(path string) error {
 	e := t.Config.LoadConfig(path)
 	if e != nil {
@@ -190,6 +206,7 @@ func (t *TinyAuth) LoadConfig(path string) error {
 	return nil
 }
 
+// EncryptPassword
 func (t *TinyAuth) EncryptPassword(item tinystore.StoreItem) (tinystore.StoreItem, error) {
 	in, ok := item.(*credentials.Credential)
 	if!ok {
@@ -203,6 +220,7 @@ func (t *TinyAuth) EncryptPassword(item tinystore.StoreItem) (tinystore.StoreIte
 	return in , nil
 }
 
+// Encode
 func (t *TinyAuth) Encode(credential *credentials.Credential) (key string, value string) {
 	return t.Config.AuthorizationKey, t.Encoder.Encode(credential.Username, credential.Password)
 }

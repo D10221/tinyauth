@@ -18,8 +18,8 @@ func main() {
 
 	config := config.NewConfig("")
 
-	store:= &tinystore.SimpleStore{}
-	app.Auth = tinyauth.NewTinyAuth(config, store)
+
+	app.Auth = tinyauth.NewTinyAuth(config, nil )
 
 	e := app.Auth.LoadConfig(app.MakePath("example/tinyapp/config.json"))
 
@@ -31,7 +31,8 @@ func main() {
 		panic(e)
 	}
 
-	e = store.LoadJson(app.MakePath("example/tinyapp/credentials.json"))
+	e = tinystore.LoadJson(app.Auth.CredentialStore, app.MakePath("example/tinyapp/credentials.json"))
+
 	if e != nil { panic(e)	}
 
 

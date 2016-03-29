@@ -78,7 +78,7 @@ func (app *TinyApp) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		c,e := app.Auth.GetFormCredentials(r)
-		if  e != nil && e!= tinyauth.FormHasNoCredentials{
+		if  e != nil && e!= tinyauth.ErrFormHasNoCredentials {
 			http.Error(w, e.Error() , 500)
 			return
 		}
