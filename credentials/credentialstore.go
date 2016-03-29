@@ -102,17 +102,18 @@ func MutatorAdapter(m Mutator) tinystore.Mutator {
 }
 
 // ForEach item in store satisfied by filter mutate item with mutator if no error found, if no filter provided , process all
-func ForEach(store tinystore.Store, m Mutator, f Filter) {
+func ForEach(store tinystore.Store, m Mutator, f Filter) error {
 	if f == nil {
 		f = Always
 	}
-	tinystore.ForEach(store, MutatorAdapter(m), FilterAdapter(f))
+	return  tinystore.ForEach(store, MutatorAdapter(m), FilterAdapter(f))
 }
 
 // All true if all items evaluate true and no error occurred on StoredItem conversion, first false or error stops loop
-func All(store tinystore.Store, filter tinystore.Filter) (bool, error) {
+func All(store tinystore.Store, credentialFilter Filter) (bool, error) {
 	for _, item := range store.All() {
-		if c,e := ToCredential(item); e!=nil || !filter(c) {
+		storeFilter := FilterAdapter(credentialFilter)
+		if c,e := ToCredential(item); e!=nil || !storeFilter(c) {
 			return false, e
 		}
 	}

@@ -174,7 +174,12 @@ func (t TinyAuth) Authenticate(credential *credentials.Credential) (bool, error)
 		return false, tinystore.ErrInvalidStoreItem
 	}
 
-	return t.AuthFunc(credential.Username, credential.Password)
+	ok, err := t.AuthFunc(credential.Username, credential.Password)
+	// NotFound is Ok
+	if err == tinystore.ErrNotFound{
+		err = nil
+	}
+	return ok, err
 }
 
 // LoadConfig

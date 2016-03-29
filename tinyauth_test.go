@@ -79,11 +79,8 @@ func Test_RequireAuthentication_Encrypted(t *testing.T){
 		t.Error(e)
 	}
 
-	item, e := tAuth.CredentialStore.Find(tinyauth.CredentialNameFilter("admin"))
-	found, ok := item.(*credentials.Credential)
-	if !ok {
-		t.Error("Credential not Found")
-	}
+	found, e := credentials.FindByKey(tAuth.CredentialStore, "admin")
+
 	if e!=nil && e!= tinystore.ErrNotFound || !found.Valid() {
 		t.Error("Credential not Found")
 	}
@@ -228,6 +225,7 @@ func Test_GetFormCredentials_Encrypted(t *testing.T){
 		}
 		ok, e := auth.Authenticate(cred)
 		if e!=nil {
+			t.Log(e)
 			http.Error(w, e.Error(), 500 )
 			return
 		}

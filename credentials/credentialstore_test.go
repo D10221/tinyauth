@@ -22,12 +22,8 @@ func Test_LoadJsonFile(t *testing.T) {
 		t.Error(e)
 		return
 	}
-	if value, ok := found.(*credentials.Credential); !ok {
-		t.Error("Not *Credential?")
-	} else {
-		if value.Username != "admin" {
-			t.Errorf("What we found?: &v", value)
-		}
+	if found.Username != "admin" {
+		t.Errorf("What we found?: &v", found)
 	}
 
 }
@@ -70,16 +66,17 @@ func Test_LoadJson(t *testing.T) {
 	}
 }
 func setPassword(paswd string) credentials.Mutator {
-	return func(in *credentials.Credential) *credentials.Credential{
+	return func(in *credentials.Credential) (*credentials.Credential, error){
 		in.Password = paswd
-		return in
+		return in, nil
 	}
 }
-func passwordEquals(pwd string) credentials.Filter{
-	return func (c *credentials.Credential) bool{
-		c!=nil && c.Password == pwd
+func passwordEquals(pwd string) credentials.Filter {
+	return func (c *credentials.Credential) bool {
+		return c!=nil && c.Password == pwd
 	}
 }
+
 func Test_ForEach(t *testing.T){
 	store:= credentials.NewCredentialStore()
 	e:= store.Add(&credentials.Credential{"admin", "password"})

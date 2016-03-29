@@ -8,6 +8,7 @@ import (
 	"github.com/D10221/tinystore"
 	"github.com/D10221/tinyauth/example/tinyapp"
 	// "github.com/gorilla/mux"
+	"github.com/D10221/tinyauth/credentials"
 )
 
 func main() {
@@ -35,8 +36,10 @@ func main() {
 
 	if e != nil { panic(e)	}
 
-
-	app.Auth.CredentialStore.ForEach(app.EncryptPassword)
+	e = credentials.ForEach(app.Auth.CredentialStore, app.EncryptPassword, nil )
+	if e!=nil {
+		panic(e)
+	}
 
 	for _, c := range app.Auth.CredentialStore.All()[:]{
 		log.Printf("Credentials: %v" , c)
